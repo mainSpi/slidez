@@ -1,0 +1,74 @@
+<html lang="pt-BR">
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="PWA para modificar pdf's, acrescentando área para anotações">
+    <meta name="author" content="Murilo Nespolo Spineli">
+    <meta name="slidez" content="Slidez 0.1">
+    <title>Slidez</title>
+
+    <link href="/styles/bootstrap.min.css" rel="stylesheet">
+    <link href="/styles/bootstrap-icons.css" rel="stylesheet">
+    <link rel="stylesheet" href="styles/style.css">
+
+    <!-- Favicons -->
+    <link rel="icon" href="/images/favicon-32x32.png" sizes="32x32" type="image/png">
+    <link rel="icon" href="/images/favicon-16x16.png" sizes="16x16" type="image/png">
+    <link rel="manifest" href="/manifest.json">
+    <link rel="icon" href="/favicon.png">
+    <meta name="theme-color" content="#0078ff">
+</head>
+
+<body class="text-center">
+    <main class="form-signin">
+        <form>
+            <i class="bi bi-pencil-square" style="font-size: 5rem; color: #0078ff;"></i>
+            <h1 class="h3 fw-normal main-title">Slidez</h1>
+
+            <div class="mb-3">
+                <input class="form-control" type="file" id="fileInput">
+            </div>
+
+            <div class="container">
+                <div class="row">
+                    <div class="col"></div>
+                    <div class="col-auto">
+                        <div class="mb-3 row g-3 align-items-center">
+                            <div class="col-auto">
+                                <label for="exampleColorInput" class="form-label">Cor do fundo</label>
+                            </div>
+                            <div class="col-auto">
+                                <input type="color" class="form-control form-control-color" id="colorInput"
+                                    value="#FFFFFF" title="Escolha a cor">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col"></div>
+                </div>
+            </div>
+
+            <div class="form-check mb-3">
+                <input class="form-check-input" type="checkbox" value="" id="useMediumColor" disabled>
+                <label class="form-check-label" for="flexCheckDisabled">
+                    Usar cor média de cada página
+                </label>
+            </div>
+
+            <div class="mb-3">
+                <label for="customRange3" class="form-label">Espaço adicionado</label>
+                <input type="range" class="form-range" min="0" max="10" step="1" id="blankRange">
+            </div>
+
+            <button class="w-100 btn btn-lg btn-primary" style="margin-top: 1rem;" id="baixarButton">Baixar</button>
+            <p class="mt-5 mb-3 text-muted">Murilo Spineli © UFRJ</p>
+        </form>
+    </main>
+</body>
+
+<script src="/scripts/bootstrap.min.js"></script>
+<script type="text/javascript" src="/scripts/pdf-lib.js"></script>
+<script type="text/javascript" src="/scripts/pdf-download.js"></script>
+<script src="/scripts/script.js"></script>
+
+</html>
