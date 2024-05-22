@@ -1,5 +1,5 @@
 // Files to cache
-const cacheName = 'slidez-v1';
+const cacheName = 'slidez-v2';
 const appShellFiles = [
     '/',
     // '/images/',
@@ -10,6 +10,8 @@ const appShellFiles = [
     '/scripts/script.js',
     '/scripts/pdf-lib.js',
     '/scripts/pdf-download.js',
+    '/scripts/pdf.mjs',
+    '/scripts/pdf.worker.mjs',
 
     '/styles/bootstrap.min.css',
     '/styles/bootstrap-icons.css',

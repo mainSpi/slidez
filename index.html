@@ -60,15 +60,21 @@
                 <input type="range" class="form-range" min="0" max="10" step="1" id="blankRange">
             </div>
 
+            <button type="button" class="btn btn-secondary" id="rotateBtn">Rotacionar</button>
+
+            <canvas style="width: -webkit-fill-available;" id="the-canvas"></canvas>
+
             <button class="w-100 btn btn-lg btn-primary" style="margin-top: 1rem;" id="baixarButton">Baixar</button>
             <p class="mt-5 mb-3 text-muted">Murilo Spineli © UFRJ</p>
         </form>
     </main>
+
 </body>
 
 <script src="/scripts/bootstrap.min.js"></script>
 <script type="text/javascript" src="/scripts/pdf-lib.js"></script>
 <script type="text/javascript" src="/scripts/pdf-download.js"></script>
+<script src="/scripts/pdf.mjs" type="module"></script>
 <script src="/scripts/script.js"></script>
 
 </html>
