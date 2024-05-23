@@ -23,3 +23,6 @@ To use Mitocôndria Virtual, simply visit the deployed version on GitHub Pages a
 ## License
 
 Não tenho a menor ideia de o que escrever aqui e o chatgpt nao vai me salvar dessa
+
+salvando aqui:
+https://www.svgviewer.dev/

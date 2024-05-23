@@ -12,6 +12,7 @@ const appShellFiles = [
     '/scripts/pdf-download.js',
     '/scripts/pdf.mjs',
     '/scripts/pdf.worker.mjs',
+    '/scripts/fast-average-color.min.js',
 
     '/styles/bootstrap.min.css',
     '/styles/bootstrap-icons.css',
