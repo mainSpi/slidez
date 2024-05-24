@@ -2,6 +2,7 @@
   "name": "Slidez",
   "short_name": "Slidez",
   "description": "PWA para modificar pdf's, acrescentando área para anotações",
+  "author": "https://github.com/mainSpi/slidez",
   "icons": [
     {
       "src": "/images/android-chrome-192x192.png",

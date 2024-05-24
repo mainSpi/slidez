@@ -2,8 +2,7 @@
 
 ## Description
 
-Mitocôndria Virtual is a Progressive Web App (PWA) designed to simulate the functioning of a mitochondria for educational purposes. This interactive tool provides a visual representation of mitochondrial processes, allowing users to explore and understand the addition of different substrates and the proton gradient within the organelle. With the added capability to plot graphs, Mitocôndria Virtual offers an engaging learning experience for cellular biology enthusiasts.
-
+Slidez is a Progressive Web App (PWA) designed to edit PDF's to enlarge pages and add blank spaces for annotations. 
 
 ## Table of Contents
 
@@ -13,16 +12,18 @@ Mitocôndria Virtual is a Progressive Web App (PWA) designed to simulate the fun
 
 ## Installation
 
-To use Mitocôndria Virtual, simply visit the deployed version on GitHub Pages at [Mitocôndria Virtual](https://mainSpi.github.io). Since it's a PWA, no additional installation steps are required.
+To use it, either clone the repo and host it yourself or visit on [Slidez](https://slidez.vercel.app)
+
+Since it's a PWA, no additional installation steps are required. If you wish to install it on your device, follow the instructions on your browser.
 
 ## Usage
 
-1. Open the [Mitocôndria Virtual](https://mainSpi.github.io) link in your web browser.
-2. Explore the various interactive features to understand the processes within a mitochondrion.
+1. Open the [Slidez](https://slidez.vercel.app) link in your web browser.
+2. Edit PDF's online.
 
 ## License
 
 Não tenho a menor ideia de o que escrever aqui e o chatgpt nao vai me salvar dessa
 
-salvando aqui:
+muito bom esse site aqui vou salvar pra nao esquecer:
 https://www.svgviewer.dev/
