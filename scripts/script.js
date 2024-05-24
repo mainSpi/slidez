@@ -19,7 +19,7 @@ const slider = document.getElementById('blankRange');
 const displayCanvas = document.getElementById('the-canvas');
 const checkDefaultBackground = document.getElementById('checkDefaultBackground');
 const checkAvgColor = document.getElementById('checkAvgColor');
-const context = displayCanvas.getContext('2d');
+const context = displayCanvas.getContext('2d', {willReadFrequently: true}); // https://html.spec.whatwg.org/multipage/canvas.html#concept-canvas-will-read-frequently
 const fac = new FastAverageColor();
 
 let rotation = 0;
@@ -32,7 +32,6 @@ rotateButton.addEventListener('click', () => {
 });
 
 function updatePDF() {
-
     let reader = new FileReader();
     reader.onload = function () {
         drawNewPdf(this.result, true).then(bytes => {
@@ -78,8 +77,10 @@ button.addEventListener('click', function (e) {
     e.preventDefault();
     let reader = new FileReader();
     reader.onload = function () {
-        drawNewPdf(this.result, false).then(bytes =>
-            download(bytes, 'slidez_' + filePicker.files[0].name, "application/pdf"));
+        drawNewPdf(this.result, false).then(bytes => {
+            console.log("teoricamente acabou");
+            download(bytes, 'slidez_' + filePicker.files[0].name, "application/pdf");
+        });
 
     }
     reader.readAsArrayBuffer(filePicker.files[0]);
@@ -89,60 +90,56 @@ button.addEventListener('click', function (e) {
 const {PDFDocument, rgb, degrees} = PDFLib;
 
 async function drawNewPdf(orgBytes, preview) {
+    return new Promise(async resolve => {
+        let increaseValue = 1.1 + Number(slider.value) / 10;
 
-    let increaseValue = 1.1 + Number(slider.value) / 10;
+        const pdfDoc = await PDFDocument.load(orgBytes);
+        const newDoc = await PDFDocument.create();
+        const pages = await pdfDoc.getPages();
 
-    const pdfDoc = await PDFDocument.load(orgBytes);
-    const newDoc = await PDFDocument.create();
-    const pages = await pdfDoc.getPages();
+        // this crazy condition is to use the same function for the preview and for the download function
+        for (let i = 0; i < (preview ? 1 : pages.length); i++) {
+            const oldPage = pages[i];
 
-    for (let i = 0; i < (preview ? 1 : pages.length); i++) {
-        const oldPage = pages[i];
+            const newPage = newDoc.addPage([
+                Math.round(oldPage.getWidth() * increaseValue),
+                Math.round(oldPage.getHeight() * increaseValue)
+            ]);
 
-        ;
+            const workPage = await newDoc.embedPage(oldPage);
+            const workPageDims = workPage.scale(1);
 
-        const newPage = newDoc.addPage([
-            Math.round(oldPage.getWidth() * increaseValue),
-            Math.round(oldPage.getHeight() * increaseValue)
-        ]);
+            let color = await getAvgColorFromPage(oldPage);
 
-        const workPage = await newDoc.embedPage(oldPage);
-        const workPageDims = workPage.scale(1);
-
-        getAvgColorFromPage(oldPage).then(color => {
-            // debugger;
-            console.log(color);
-            drawSVGBackground(newPage, color, {
+            await drawSVGBackground(newPage, color, {
                 x: Math.round(newPage.getWidth() / 2 - workPageDims.width / 2),
                 y: Math.round(newPage.getHeight() / 2 - workPageDims.height / 2),
                 h: Math.round(oldPage.getHeight()),
                 w: Math.round(oldPage.getWidth()),
             });
 
-            newPage.drawPage(workPage, {
+            await newPage.drawPage(workPage, {
                 ...workPageDims,
                 x: newPage.getWidth() / 2 - workPageDims.width / 2,
                 y: newPage.getHeight() / 2 - workPageDims.height / 2,
-                //rotate: degrees(720),
             });
-            newPage.setRotation(degrees(rotation))
-        })
-    }
+            await newPage.setRotation(degrees(rotation));
+        }
+        newDoc.save().then(bytes => resolve(bytes));
 
-    return await newDoc.save();
-
+    });
 }
 
-function drawSVGBackground(page, backColor, dims) {
+async function drawSVGBackground(page, backColor, dims) {
     const externalPath = 'M 0 0 ' +
         'L 0 ' + Math.round(page.getHeight()) + ' ' +
         'L ' + Math.round(page.getWidth()) + ' ' + Math.round(page.getHeight()) + ' ' +
         'L ' + Math.round(page.getWidth()) + ' 0 ' +
         'L 0 0';
 
-    page.moveTo(0, page.getHeight())
+    await page.moveTo(0, page.getHeight())
     const color = hexToRgb(backColor);
-    page.drawSvgPath(externalPath, {color: rgb(color.r / 255, color.g / 255, color.b / 255)})
+    await page.drawSvgPath(externalPath, {color: rgb(color.r / 255, color.g / 255, color.b / 255)})
 
     if (checkDefaultBackground.checked) {
         // this is the oldPage background that we are painting
@@ -152,8 +149,8 @@ function drawSVGBackground(page, backColor, dims) {
             'L ' + dims.w + ' ' + dims.h + ' ' +
             'L 0 ' + dims.h + ' ' +
             'L 0 0';
-        page.moveTo(dims.x, page.getHeight() - dims.y);
-        page.drawSvgPath(internalPath, {color: rgb(1, 1, 1)})
+        await page.moveTo(dims.x, page.getHeight() - dims.y);
+        await page.drawSvgPath(internalPath, {color: rgb(1, 1, 1)})
     }
 }
 
@@ -161,10 +158,11 @@ async function getAvgColorFromPage(oldPage) {
     return new Promise(async resolve => {
         if (!checkAvgColor.checked) {
             resolve(colorPicker.value);
+            return;
         }
 
         const canvas = document.createElement('canvas');
-        const ctx = canvas.getContext('2d');
+        const ctx = canvas.getContext('2d', {willReadFrequently: true});
 
         const newDoc = await PDFDocument.create();
         const newPage = newDoc.addPage([oldPage.getWidth(), oldPage.getHeight()]);
@@ -178,7 +176,7 @@ async function getAvgColorFromPage(oldPage) {
 
             pdf.getPage(1).then(function (page) {
 
-                const viewport = page.getViewport({scale: 1});
+                const viewport = page.getViewport({scale: 0.1});
                 canvas.height = viewport.height;
                 canvas.width = viewport.width;
 
@@ -187,10 +185,7 @@ async function getAvgColorFromPage(oldPage) {
                     viewport: viewport
                 };
                 page.render(renderContext).promise.then(() => {
-                    fac.getColorAsync(canvas)
-                        .then(color => {
-                            resolve(color.hex);
-                        });
+                    resolve(fac.getColor(canvas).hex);
                 });
             });
         });

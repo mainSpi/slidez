@@ -4,7 +4,7 @@
 
 -> add color picker for background !
 
--> add pwa func
+-> add pwa func !
     pdf scripts need to be cached !
 
 -> rotate function !
@@ -12,10 +12,11 @@
 -> add some color to the page's background to solve transparency issues !
     - make this an option !
 
+-> add option to use medium color as background - kinda of out of reach rn - NOT ANYMORRR ???? !!!!
+    - calculate all colors beforehand, so you dont have to wait while building the pdf - i didnt do this lol
+
 -> default PDF/drawing on canvas
 
 -> README update
 
 -> file detection: is it a PDF? did it load correctly? was the file picker dialog window closed?
-
--> add option to use medium color as background - kinda of out of reach rn - NOT ANYMORRR ????
