@@ -21,9 +21,11 @@
 
 -> file detection: is it a PDF? did it load correctly? was the file picker dialog window closed? !
 
--> image upload and concat feature
-    - suggested by babi
-
 -> auto disable service worker function (its annoying asf) !
 
--> add cache refresh feature
+-> add cache refresh feature ! this already exists its called cacheName !
+
+-> better example pdf and isolate it from the scripts file !
+
+-> image upload and concat feature
+    - suggested by babi
