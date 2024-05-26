@@ -20,3 +20,8 @@
 -> default PDF/drawing on canvas !
 
 -> file detection: is it a PDF? did it load correctly? was the file picker dialog window closed? !
+
+-> image upload and concat feature
+    - suggested by babi
+
+-> auto disable service worker function (its annoying asf)

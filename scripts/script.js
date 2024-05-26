@@ -1,3 +1,4 @@
+/*
 if ("serviceWorker" in navigator) {
 	window.addEventListener('load', async () => {
 		try {
@@ -8,6 +9,7 @@ if ("serviceWorker" in navigator) {
 		}
 	});
 }
+*/
 
 const filePicker = document.getElementById('fileInput');
 const colorPicker = document.getElementById('colorInput');
