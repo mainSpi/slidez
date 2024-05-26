@@ -24,4 +24,6 @@
 -> image upload and concat feature
     - suggested by babi
 
--> auto disable service worker function (its annoying asf)
+-> auto disable service worker function (its annoying asf) !
+
+-> add cache refresh feature

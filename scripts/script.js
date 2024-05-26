@@ -1,5 +1,7 @@
-/*
-if ("serviceWorker" in navigator) {
+
+// only use cache stuff if we are not on production
+const isDev = window.location.hostname == "localhost";
+if ("serviceWorker" in navigator && !isDev) {
 	window.addEventListener('load', async () => {
 		try {
 			const reg = await navigator.serviceWorker.register("/sw.js");
@@ -9,7 +11,7 @@ if ("serviceWorker" in navigator) {
 		}
 	});
 }
-*/
+
 
 const filePicker = document.getElementById('fileInput');
 const colorPicker = document.getElementById('colorInput');
