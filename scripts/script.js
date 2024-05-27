@@ -20,6 +20,7 @@ const slider = document.getElementById('blankRange');
 const displayCanvas = document.getElementById('the-canvas');
 const checkDefaultBackground = document.getElementById('checkDefaultBackground');
 const checkAvgColor = document.getElementById('checkAvgColor');
+const checkA4 = document.getElementById('checkA4');
 const context = displayCanvas.getContext('2d', { willReadFrequently: true }); // https://html.spec.whatwg.org/multipage/canvas.html#concept-canvas-will-read-frequently
 const fac = new FastAverageColor();
 
@@ -118,6 +119,7 @@ slider.addEventListener('change', updatePDF);
 colorPicker.addEventListener('change', updatePDF);
 checkDefaultBackground.addEventListener('change', updatePDF);
 checkAvgColor.addEventListener('change', updatePDF);
+checkA4.addEventListener('change', updatePDF);
 
 button.addEventListener('click', function (e) {
     e.preventDefault();
@@ -140,13 +142,26 @@ async function drawNewPdf(orgBytes, preview) {
         for (let i = 0; i < (preview ? 1 : pages.length); i++) {
             const oldPage = pages[i];
 
-            const newPage = newDoc.addPage([
-                Math.round(oldPage.getWidth() * increaseValue),
-                Math.round(oldPage.getHeight() * increaseValue)
-            ]);
+            let newPage, workPage, workPageDims = null;
 
-            const workPage = await newDoc.embedPage(oldPage);
-            const workPageDims = workPage.scale(1);
+            // if it has to be A4 size (loses quality but can be printed easily)
+            if (checkA4.checked) {
+                newPage = newDoc.addPage([
+                    Math.round(oldPage.getWidth()),
+                    Math.round(oldPage.getHeight())
+                ]);
+
+                workPage = await newDoc.embedPage(oldPage);
+                workPageDims = workPage.scale(increaseValue - 1);
+            } else {
+                newPage = newDoc.addPage([
+                    Math.round(oldPage.getWidth() * increaseValue),
+                    Math.round(oldPage.getHeight() * increaseValue)
+                ]);
+
+                workPage = await newDoc.embedPage(oldPage);
+                workPageDims = workPage.scale(1);
+            }
 
             let color = await getAvgColorFromPage(oldPage);
 
