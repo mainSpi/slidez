@@ -33,4 +33,6 @@
     - https://pdf-lib.js.org/docs/api/classes/pdfdocument#embedjpg
     - suggested by babi
 
+-> force A4 option (printing is broken)
+
 -> update cache version

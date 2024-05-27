@@ -1,6 +1,9 @@
 html,
 body {
     height: 100%;
+    border-radius: 20px;
+    -webkit-border-radius: 20px;
+    -moz-border-radius: 20px;
 }
 
 body {
@@ -13,8 +16,10 @@ body {
 
 .form-signin {
     width: 100%;
-    max-width: 330px;
+    max-width: 350;
     padding: 15px;
+    padding-left: 2%;
+    padding-right: 2%;
     margin: auto;
 }
 
@@ -56,4 +61,34 @@ body {
 .main-title {
     margin-bottom: 2rem;
     margin-top: 0.5rem;
+}
+
+.css-selector {
+    background: linear-gradient(304deg, #b38cb4, #a7cecb, #f8f272, #faa489, #41dc91);
+    background-size: 1000% 1000%;
+
+    -webkit-animation: AnimationName 30s ease infinite;
+    -moz-animation: AnimationName 30s ease infinite;
+    animation: AnimationName 30s ease infinite;
+}
+
+@-webkit-keyframes AnimationName {
+    0%{background-position:0% 50%}
+    50%{background-position:100% 50%}
+    100%{background-position:0% 50%}
+}
+@-moz-keyframes AnimationName {
+    0%{background-position:0% 50%}
+    50%{background-position:100% 50%}
+    100%{background-position:0% 50%}
+}
+@keyframes AnimationName {
+    0%{background-position:0% 50%}
+    50%{background-position:100% 50%}
+    100%{background-position:0% 50%}
+}
+
+.main-class {
+    background-color: rgba(255, 255, 255, 0.6);
+    border-radius: 20px;
 }
