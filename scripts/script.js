@@ -1,15 +1,14 @@
-
 // only use cache stuff if we are not on production
 const isDev = window.location.hostname == "localhost";
 if ("serviceWorker" in navigator && !isDev) {
-	window.addEventListener('load', async () => {
-		try {
-			const reg = await navigator.serviceWorker.register("/sw.js");
-			console.log('Service worker registered', reg);
-		} catch (err) {
-			console.log('Service worker registration failed: ', err);
-		}
-	});
+    window.addEventListener('load', async () => {
+        try {
+            const reg = await navigator.serviceWorker.register("/sw.js");
+            console.log('Service worker registered', reg);
+        } catch (err) {
+            console.log('Service worker registration failed: ', err);
+        }
+    });
 }
 
 
@@ -21,7 +20,7 @@ const slider = document.getElementById('blankRange');
 const displayCanvas = document.getElementById('the-canvas');
 const checkDefaultBackground = document.getElementById('checkDefaultBackground');
 const checkAvgColor = document.getElementById('checkAvgColor');
-const context = displayCanvas.getContext('2d', {willReadFrequently: true}); // https://html.spec.whatwg.org/multipage/canvas.html#concept-canvas-will-read-frequently
+const context = displayCanvas.getContext('2d', { willReadFrequently: true }); // https://html.spec.whatwg.org/multipage/canvas.html#concept-canvas-will-read-frequently
 const fac = new FastAverageColor();
 
 let rotation = 0;
@@ -44,12 +43,12 @@ function updatePDF() {
 }
 
 function displayPDF(pdfData) {
-    let {pdfjsLib} = globalThis;
+    let { pdfjsLib } = globalThis;
     pdfjsLib.GlobalWorkerOptions.workerSrc = '/scripts/pdf.worker.mjs';
-    pdfjsLib.getDocument({data: pdfData}).promise.then(function (pdf) {
+    pdfjsLib.getDocument({ data: pdfData }).promise.then(function (pdf) {
         pdf.getPage(1).then(function (page) {
 
-            const viewport = page.getViewport({scale: 1});
+            const viewport = page.getViewport({ scale: 1 });
 
             // Prepare canvas using PDF page dimensions
             displayCanvas.height = viewport.height;
@@ -65,11 +64,48 @@ function displayPDF(pdfData) {
     });
 }
 
-slider.addEventListener('change', updatePDF);
 filePicker.addEventListener('change', () => {
-    if (filePicker.files.length === 0){
+    if (filePicker.files.length === 0) {
         return;
     }
+
+    // get file names
+    let a = Array.from(filePicker.files);
+
+    // get file extensions
+    let b = a.map(item => {
+        let split = item.name.split('.');
+        return split[split.length - 1];
+    });
+
+    // select unique values from the extensions list
+    let unique = b.filter((value, index, array) => array.indexOf(value) === index);
+
+    // test all files to be of allowed extensions
+    let haveForbiddenFile = unique
+        .map(f => f == 'pdf' || f == 'png' || f == 'jpg' || f == 'jpeg')
+        .includes(false);
+
+    if (haveForbiddenFile) {
+        alert("Somente as extensões .pdf .png .jpg .jpeg são permitidas!");
+        filePicker.value = null;
+        return;
+    }
+
+    // if there are many pdf's selected
+    if (unique.length === 1 && unique[0] == 'pdf') {
+        alert("Um PDF de cada vez!");
+        filePicker.value = null;
+        return;
+    }
+
+    // if its mixed AND it has a pdf (pdf + img something we dont want)
+    if (unique.length > 1 && unique.includes('pdf')) {
+        alert("Não misture PDF com imagens!");
+        filePicker.value = null;
+        return;
+    }
+
     let reader = new FileReader();
     reader.onload = function () {
         fileBuffer = this.result;
@@ -78,6 +114,7 @@ filePicker.addEventListener('change', () => {
     }
     reader.readAsArrayBuffer(filePicker.files[0]);
 });
+slider.addEventListener('change', updatePDF);
 colorPicker.addEventListener('change', updatePDF);
 checkDefaultBackground.addEventListener('change', updatePDF);
 checkAvgColor.addEventListener('change', updatePDF);
@@ -89,7 +126,7 @@ button.addEventListener('click', function (e) {
     });
 });
 
-const {PDFDocument, rgb, degrees} = PDFLib;
+const { PDFDocument, rgb, degrees } = PDFLib;
 
 async function drawNewPdf(orgBytes, preview) {
     return new Promise(async resolve => {
@@ -141,7 +178,7 @@ async function drawSVGBackground(page, backColor, dims) {
 
     await page.moveTo(0, page.getHeight())
     const color = hexToRgb(backColor);
-    await page.drawSvgPath(externalPath, {color: rgb(color.r / 255, color.g / 255, color.b / 255)})
+    await page.drawSvgPath(externalPath, { color: rgb(color.r / 255, color.g / 255, color.b / 255) })
 
     if (checkDefaultBackground.checked) {
         // this is the oldPage background that we are painting
@@ -152,7 +189,7 @@ async function drawSVGBackground(page, backColor, dims) {
             'L 0 ' + dims.h + ' ' +
             'L 0 0';
         await page.moveTo(dims.x, page.getHeight() - dims.y);
-        await page.drawSvgPath(internalPath, {color: rgb(1, 1, 1)})
+        await page.drawSvgPath(internalPath, { color: rgb(1, 1, 1) })
     }
 }
 
@@ -164,7 +201,7 @@ async function getAvgColorFromPage(oldPage) {
         }
 
         const canvas = document.createElement('canvas');
-        const ctx = canvas.getContext('2d', {willReadFrequently: true});
+        const ctx = canvas.getContext('2d', { willReadFrequently: true });
 
         const newDoc = await PDFDocument.create();
         const newPage = newDoc.addPage([oldPage.getWidth(), oldPage.getHeight()]);
@@ -172,13 +209,13 @@ async function getAvgColorFromPage(oldPage) {
         await newPage.drawPage(workPage);
         const bytes = await newDoc.save();
 
-        let {pdfjsLib} = globalThis;
+        let { pdfjsLib } = globalThis;
         pdfjsLib.GlobalWorkerOptions.workerSrc = '/scripts/pdf.worker.mjs';
-        pdfjsLib.getDocument({data: bytes}).promise.then(function (pdf) {
+        pdfjsLib.getDocument({ data: bytes }).promise.then(function (pdf) {
 
             pdf.getPage(1).then(function (page) {
 
-                const viewport = page.getViewport({scale: 0.1});
+                const viewport = page.getViewport({ scale: 0.1 });
                 canvas.height = viewport.height;
                 canvas.width = viewport.width;
 
