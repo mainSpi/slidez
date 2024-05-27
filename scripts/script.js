@@ -94,7 +94,7 @@ filePicker.addEventListener('change', () => {
     }
 
     // if there are many pdf's selected
-    if (unique.length === 1 && unique[0] == 'pdf') {
+    if (a.length > 1 && unique.length === 1 && unique[0] == 'pdf') {
         alert("Um PDF de cada vez!");
         filePicker.value = null;
         return;
@@ -106,6 +106,7 @@ filePicker.addEventListener('change', () => {
         filePicker.value = null;
         return;
     }
+
 
     let reader = new FileReader();
     reader.onload = function () {
