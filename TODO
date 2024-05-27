@@ -35,4 +35,7 @@
     - https://pdf-lib.js.org/docs/api/classes/pdfdocument#embedjpg
     - suggested by babi
 
+-> concat all pdf's selected
+    - concat everything? maymbe its too messy
+
 -> update cache version

@@ -107,6 +107,11 @@ filePicker.addEventListener('change', () => {
         return;
     }
 
+    // if we are dealing with images
+    if (!unique.includes('pdf')){
+        // convert every image into a pdf page, A4 sized. Get the bites out of this document and set it to fileBuffer, somehow make it work.
+    }
+
 
     let reader = new FileReader();
     reader.onload = function () {
