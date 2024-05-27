@@ -65,6 +65,7 @@ body {
 
 .css-selector {
     background: linear-gradient(304deg, #b38cb4, #a7cecb, #f8f272, #faa489, #41dc91);
+    /* background: linear-gradient(304deg, #FFAF45, #5F5D9C, #A4CE95, #F4EDCC, #6196A6); */
     background-size: 1000% 1000%;
 
     -webkit-animation: AnimationName 30s ease infinite;

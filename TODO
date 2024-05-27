@@ -27,12 +27,12 @@
 
 -> better example pdf and isolate it from the scripts file !
 
+-> force A4 option (printing is broken) !
+
 -> image upload and concat feature
     - implement better verification strategy: only one pdf/png/jpg/jpeg is allowed, do not mix pdf with images !
     - https://pdf-lib.js.org/docs/api/classes/pdfdocument#embedpng
     - https://pdf-lib.js.org/docs/api/classes/pdfdocument#embedjpg
     - suggested by babi
-
--> force A4 option (printing is broken)
 
 -> update cache version

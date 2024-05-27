@@ -142,6 +142,7 @@ async function drawNewPdf(orgBytes, preview) {
         for (let i = 0; i < (preview ? 1 : pages.length); i++) {
             const oldPage = pages[i];
 
+            let color = await getAvgColorFromPage(oldPage);
             let newPage, workPage, workPageDims = null;
 
             // if it has to be A4 size (loses quality but can be printed easily)
@@ -152,8 +153,9 @@ async function drawNewPdf(orgBytes, preview) {
                 ]);
 
                 workPage = await newDoc.embedPage(oldPage);
-                workPageDims = workPage.scale(increaseValue - 1);
-            } else {
+                workPageDims = workPage.scale(1 / increaseValue);
+
+            } else { // increase page size to preserve resolution
                 newPage = newDoc.addPage([
                     Math.round(oldPage.getWidth() * increaseValue),
                     Math.round(oldPage.getHeight() * increaseValue)
@@ -163,13 +165,11 @@ async function drawNewPdf(orgBytes, preview) {
                 workPageDims = workPage.scale(1);
             }
 
-            let color = await getAvgColorFromPage(oldPage);
-
             await drawSVGBackground(newPage, color, {
                 x: Math.round(newPage.getWidth() / 2 - workPageDims.width / 2),
                 y: Math.round(newPage.getHeight() / 2 - workPageDims.height / 2),
-                h: Math.round(oldPage.getHeight()),
-                w: Math.round(oldPage.getWidth()),
+                h: Math.round(workPageDims.height),
+                w: Math.round(workPageDims.width),
             });
 
             await newPage.drawPage(workPage, {
