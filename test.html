@@ -1,0 +1,71 @@
+<script type="text/javascript" src="/scripts/pdf-lib.js"></script>
+<script type="text/javascript" src="/scripts/pdf-download.js"></script>
+<script src="/scripts/pdf.mjs" type="module"></script>
+
+<script>
+
+    const {PDFDocument, rgb, degrees, PageSizes} = PDFLib;
+
+    async function embedImages() {
+        const jpgUrl = '/images/cat_riding_unicorn.jpg';
+
+        const jpgImageBytes = await fetch(jpgUrl).then((res) => res.arrayBuffer());
+
+        const pdfDoc = await PDFDocument.create();
+
+        const embeddedJpg = await pdfDoc.embedJpg(jpgImageBytes);
+
+        const jpgDims = embeddedJpg.scale(0.5);
+
+        const oddPage = await pdfDoc.addPage([embeddedJpg.width, embeddedJpg.height]);
+
+        await oddPage.drawImage(embeddedJpg, {
+            // x: page.getWidth() / 2 - jpgDims.width / 2,
+            // y: page.getHeight() / 2 - jpgDims.height / 2 + 250,
+            // width: jpgDims.width,
+            // height: jpgDims.height,
+        });
+
+
+        // oddly shaped page that needs to be fitted to an a4 sized one.
+        const a4Page = await pdfDoc.addPage(PageSizes.A4);
+
+        let angle = 45 * Math.PI / 180;
+
+        let mat1 = [[],
+                    [],
+                    []]
+
+        const embOddPage = await pdfDoc.embedPage(oddPage, {
+                left: oddPage.getWidth(), right: 0, top: oddPage.getHeight(), bottom: 0
+            }, [
+                Math.cos(angle),
+                Math.sin(angle),
+                -1 * Math.sin(angle),
+                Math.cos(angle),
+                0,
+                0,
+            ]
+        );
+
+        let fx = Math.abs(PageSizes.A4[0] / embOddPage.width);
+        let fy = Math.abs(PageSizes.A4[1] / embOddPage.height);
+
+        let newScale = fx >= fy ? fy : fx;
+        console.log(newScale);
+        let embOddPageDims = await embOddPage.scale(newScale);
+        // let embOddPageDims = await embOddPage.scale(1);
+
+        a4Page.drawPage(embOddPage, {
+            ...embOddPageDims,
+            // x: a4Page.getWidth() / 2 - embOddPageDims.width / 2,
+            // y: a4Page.getHeight() / 2 - embOddPageDims.height / 2,
+        });
+
+        const pdfBytes = await pdfDoc.save();
+        download(pdfBytes, 'test.pdf', "application/pdf");
+    }
+
+    embedImages();
+
+</script>

@@ -22,13 +22,33 @@ const checkDefaultBackground = document.getElementById('checkDefaultBackground')
 const checkAvgColor = document.getElementById('checkAvgColor');
 const checkA4 = document.getElementById('checkA4');
 const context = displayCanvas.getContext('2d', {willReadFrequently: true}); // https://html.spec.whatwg.org/multipage/canvas.html#concept-canvas-will-read-frequently
+
 const fac = new FastAverageColor();
-
+const {PDFDocument, rgb, degrees, PageSizes} = PDFLib;
 let rotation = 0;
-
 let fileBuffer = '';
 let fileName = '';
 
+slider.addEventListener('change', updatePDF);
+colorPicker.addEventListener('change', updatePDF);
+checkDefaultBackground.addEventListener('change', updatePDF);
+checkAvgColor.addEventListener('change', updatePDF);
+checkA4.addEventListener('change', updatePDF);
+
+window.addEventListener('load', () => {
+    defaultPDF();
+    updatePDF();
+});
+button.addEventListener('click', function (e) {
+    button.setAttribute('disabled', '');
+    button.classList.add('btn-secondary');
+    e.preventDefault();
+    drawNewPdf(fileBuffer, false).then(bytes => {
+        download(bytes, 'slidez_' + fileName, "application/pdf");
+        button.removeAttribute('disabled');
+        button.classList.remove('btn-secondary');
+    });
+});
 rotateButton.addEventListener('click', () => {
     rotation += 90;
     if (rotation === 360) {
@@ -36,35 +56,6 @@ rotateButton.addEventListener('click', () => {
     }
     updatePDF();
 });
-
-function updatePDF() {
-    drawNewPdf(fileBuffer, true).then(bytes => {
-        displayPDF(bytes);
-    });
-}
-
-function displayPDF(pdfData) {
-    let {pdfjsLib} = globalThis;
-    pdfjsLib.GlobalWorkerOptions.workerSrc = '/scripts/pdf.worker.mjs';
-    pdfjsLib.getDocument({data: pdfData}).promise.then(function (pdf) {
-        pdf.getPage(1).then(function (page) {
-
-            const viewport = page.getViewport({scale: 1});
-
-            // Prepare canvas using PDF page dimensions
-            displayCanvas.height = viewport.height;
-            displayCanvas.width = viewport.width;
-
-            // Render PDF page into canvas context
-            const renderContext = {
-                canvasContext: context,
-                viewport: viewport
-            };
-            page.render(renderContext);
-        });
-    });
-}
-
 filePicker.addEventListener('change', async () => {
     filePicker.setAttribute('disabled', '');
     if (filePicker.files.length === 0) {
@@ -113,24 +104,28 @@ filePicker.addEventListener('change', async () => {
 
     filePicker.removeAttribute('disabled');
 });
-slider.addEventListener('change', updatePDF);
-colorPicker.addEventListener('change', updatePDF);
-checkDefaultBackground.addEventListener('change', updatePDF);
-checkAvgColor.addEventListener('change', updatePDF);
-checkA4.addEventListener('change', updatePDF);
 
-button.addEventListener('click', function (e) {
-    button.setAttribute('disabled', '');
-    button.classList.add('btn-secondary');
-    e.preventDefault();
-    drawNewPdf(fileBuffer, false).then(bytes => {
-        download(bytes, 'slidez_' + fileName, "application/pdf");
-        button.removeAttribute('disabled');
-        button.classList.remove('btn-secondary');
+function displayPDF(pdfData) {
+    let {pdfjsLib} = globalThis;
+    pdfjsLib.GlobalWorkerOptions.workerSrc = '/scripts/pdf.worker.mjs';
+    pdfjsLib.getDocument({data: pdfData}).promise.then(function (pdf) {
+        pdf.getPage(1).then(function (page) {
+
+            const viewport = page.getViewport({scale: 1});
+
+            // Prepare canvas using PDF page dimensions
+            displayCanvas.height = viewport.height;
+            displayCanvas.width = viewport.width;
+
+            // Render PDF page into canvas context
+            const renderContext = {
+                canvasContext: context,
+                viewport: viewport
+            };
+            page.render(renderContext);
+        });
     });
-});
-
-const {PDFDocument, rgb, degrees, PageSizes} = PDFLib;
+}
 
 async function drawNewPdf(orgBytes, preview) {
     return new Promise(async resolve => {
@@ -149,8 +144,8 @@ async function drawNewPdf(orgBytes, preview) {
 
             // if it has to be A4 size (loses quality but can be printed easily)
             if (checkA4.checked) {
-                // let a4Page = newDoc.addPage(PageSizes.A4);
-                // oldPage = convertIntoA4();
+
+                oldPage = await pageToA4(oldPage);
 
                 newPage = newDoc.addPage([
                     oldPage.getWidth(),
@@ -159,6 +154,9 @@ async function drawNewPdf(orgBytes, preview) {
 
                 workPage = await newDoc.embedPage(oldPage);
                 workPageDims = workPage.scale(1 / increaseValue);
+
+                // newPage seja A4
+                // workPage seja o produto final ali do lado
 
             } else { // increase page size to preserve resolution
                 newPage = newDoc.addPage([
@@ -253,6 +251,45 @@ async function getAvgColorFromPage(oldPage) {
 
 }
 
+async function pageToA4(page) {
+    const pdfDoc = await PDFDocument.create();
+    const a4Page = await pdfDoc.addPage(PageSizes.A4);
+
+    // this two commented blocks are work in progress
+    /*
+    let angle =  page.getRotation().angle * Math.PI / 180;
+    console.log("angle: " + angle);
+    */
+
+    const embOddPage = await pdfDoc.embedPage(page /*, {
+        left: page.getWidth(), right: 0, top: page.getHeight(), bottom: 0
+    }, [
+        Math.cos(angle),
+        Math.sin(angle),
+        -1 * Math.sin(angle),
+        Math.cos(angle),
+        0,
+        0,
+    ]*/
+    );
+
+    let fx = PageSizes.A4[0] / embOddPage.width;
+    let fy = PageSizes.A4[1] / embOddPage.height;
+
+    let newScale = ((fx >= fy) ? fy : fx);
+    let embOddPageDims = await embOddPage.scale(newScale);
+
+    await a4Page.drawPage(embOddPage, {
+        ...embOddPageDims,
+        x: a4Page.getWidth() / 2 - embOddPageDims.width / 2,
+        y: a4Page.getHeight() / 2 - embOddPageDims.height / 2,
+    });
+
+    await pdfDoc.save();
+
+    return a4Page;
+}
+
 function hexToRgb(hex) {
     let result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
     return result ? {
@@ -282,7 +319,6 @@ function createPdfName(list) {
 }
 
 async function buildPdfFromImages() {
-
     const mainDoc = await PDFDocument.create();
 
     for (let i = 0; i < filePicker.files.length; i++) {
@@ -292,7 +328,7 @@ async function buildPdfFromImages() {
         let isPng = extension.toLowerCase() === 'png';
 
         let imgEmbedded;
-        let angle;
+        let angle = 0;
         if (isPng) {
             imgEmbedded = await mainDoc.embedPng(await readFileAsync(imageFile));
         } else { // at this point, it can only be a jpg (or jpeg lol)
@@ -324,7 +360,6 @@ async function buildPdfFromImages() {
 }
 
 async function buildPdf() {
-
     // if we dont need to concatenate, then dont
     if (filePicker.files.length === 1) {
         fileBuffer = await readFileAsync(filePicker.files[0]);
@@ -378,6 +413,12 @@ function getOrientation(bytes) {
 
 }
 
+function updatePDF() {
+    drawNewPdf(fileBuffer, true).then(bytes => {
+        displayPDF(bytes);
+    });
+}
+
 function defaultPDF() {
     let binary = atob(b64data.replace(/\s/g, '')); //b64Data is a constant from pdfData.js file
     let len = binary.length;
@@ -389,8 +430,3 @@ function defaultPDF() {
     fileBuffer = view;
     fileName = "EXEMPLO.pdf"
 }
-
-window.addEventListener('load', () => {
-    defaultPDF();
-    updatePDF();
-});

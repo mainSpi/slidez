@@ -46,4 +46,17 @@
 -> force A4 option (printing is broken) !
     - its not forcing A4 its just not changing the documents default size
 
+    https://pdf-lib.js.org/docs/api/#transformationmatrix
+
+    https://opensource.adobe.com/dc-acrobat-sdk-docs/pdfstandards/PDF32000_2008.pdf
+        page 128
+
+    https://math.stackexchange.com/questions/2093314/rotation-matrix-of-rotation-around-a-point-other-than-the-origin
+
+    https://www.geeksforgeeks.org/javascript-program-to-multiply-two-matrices/
+
+    FX AND FY NEED TO BE MATH.ABS() AS IN TEST.HTML
+
 -> update cache version
+
+-> only use merge on file name if its more than one file
