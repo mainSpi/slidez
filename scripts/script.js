@@ -308,7 +308,6 @@ async function buildPdfFromImages() {
         await page.drawImage(imgEmbedded);
 
         if (!isPng) {
-            console.log('rotatinggg '+angle);
             await page.setRotation(degrees(angle));
         }
     }
