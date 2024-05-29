@@ -147,8 +147,8 @@ async function drawNewPdf(orgBytes, preview) {
                 // oldPage = convertIntoA4();
 
                 newPage = newDoc.addPage([
-                    Math.round(oldPage.getWidth()),
-                    Math.round(oldPage.getHeight())
+                    oldPage.getWidth(),
+                    oldPage.getHeight()
                 ]);
 
                 workPage = await newDoc.embedPage(oldPage);
@@ -156,8 +156,8 @@ async function drawNewPdf(orgBytes, preview) {
 
             } else { // increase page size to preserve resolution
                 newPage = newDoc.addPage([
-                    Math.round(oldPage.getWidth() * increaseValue),
-                    Math.round(oldPage.getHeight() * increaseValue)
+                    oldPage.getWidth() * increaseValue,
+                    oldPage.getHeight() * increaseValue
                 ]);
 
                 workPage = await newDoc.embedPage(oldPage);
@@ -165,10 +165,10 @@ async function drawNewPdf(orgBytes, preview) {
             }
 
             await drawSVGBackground(newPage, color, {
-                x: Math.round(newPage.getWidth() / 2 - workPageDims.width / 2),
-                y: Math.round(newPage.getHeight() / 2 - workPageDims.height / 2),
-                h: Math.round(workPageDims.height),
-                w: Math.round(workPageDims.width),
+                x: newPage.getWidth() / 2 - workPageDims.width / 2,
+                y: newPage.getHeight() / 2 - workPageDims.height / 2,
+                h: workPageDims.height,
+                w: workPageDims.width,
             });
 
             await newPage.drawPage(workPage, {
@@ -185,9 +185,9 @@ async function drawNewPdf(orgBytes, preview) {
 
 async function drawSVGBackground(page, backColor, dims) {
     const externalPath = 'M 0 0 ' +
-        'L 0 ' + Math.round(page.getHeight()) + ' ' +
-        'L ' + Math.round(page.getWidth()) + ' ' + Math.round(page.getHeight()) + ' ' +
-        'L ' + Math.round(page.getWidth()) + ' 0 ' +
+        'L 0 ' + page.getHeight() + ' ' +
+        'L ' + page.getWidth() + ' ' + page.getHeight() + ' ' +
+        'L ' + page.getWidth() + ' 0 ' +
         'L 0 0';
 
     await page.moveTo(0, page.getHeight())

@@ -42,6 +42,9 @@
 -> force A4 option (printing is broken) !
     - its not forcing A4 its just not changing the documents default size
 
--> update cache version
+-> loading screen for file upload or something
 
 -> code refactor to remove promise from drawNewPdf
+
+
+-> update cache version
