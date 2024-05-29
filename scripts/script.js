@@ -322,7 +322,6 @@ async function buildPdf() {
 
     // if we dont need to concatenate, then dont
     if (filePicker.files.length === 1) {
-        console.log('um só')
         fileBuffer = await readFileAsync(filePicker.files[0]);
         fileName = filePicker.files[0].name;
     } else {
