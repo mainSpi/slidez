@@ -21,7 +21,7 @@ const displayCanvas = document.getElementById('the-canvas');
 const checkDefaultBackground = document.getElementById('checkDefaultBackground');
 const checkAvgColor = document.getElementById('checkAvgColor');
 const checkA4 = document.getElementById('checkA4');
-const context = displayCanvas.getContext('2d', { willReadFrequently: true }); // https://html.spec.whatwg.org/multipage/canvas.html#concept-canvas-will-read-frequently
+const context = displayCanvas.getContext('2d', {willReadFrequently: true}); // https://html.spec.whatwg.org/multipage/canvas.html#concept-canvas-will-read-frequently
 const fac = new FastAverageColor();
 
 let rotation = 0;
@@ -44,12 +44,12 @@ function updatePDF() {
 }
 
 function displayPDF(pdfData) {
-    let { pdfjsLib } = globalThis;
+    let {pdfjsLib} = globalThis;
     pdfjsLib.GlobalWorkerOptions.workerSrc = '/scripts/pdf.worker.mjs';
-    pdfjsLib.getDocument({ data: pdfData }).promise.then(function (pdf) {
+    pdfjsLib.getDocument({data: pdfData}).promise.then(function (pdf) {
         pdf.getPage(1).then(function (page) {
 
-            const viewport = page.getViewport({ scale: 1 });
+            const viewport = page.getViewport({scale: 1});
 
             // Prepare canvas using PDF page dimensions
             displayCanvas.height = viewport.height;
@@ -65,7 +65,7 @@ function displayPDF(pdfData) {
     });
 }
 
-filePicker.addEventListener('change', () => {
+filePicker.addEventListener('change', async () => {
     if (filePicker.files.length === 0) {
         return;
     }
@@ -84,18 +84,11 @@ filePicker.addEventListener('change', () => {
 
     // test all files to be of allowed extensions
     let haveForbiddenFile = unique
-        .map(f => f == 'pdf' || f == 'png' || f == 'jpg' || f == 'jpeg')
+        .map(f => f === 'pdf' || f === 'png' || f === 'jpg' || f === 'jpeg')
         .includes(false);
 
     if (haveForbiddenFile) {
         alert("Somente as extensões .pdf .png .jpg .jpeg são permitidas!");
-        filePicker.value = null;
-        return;
-    }
-
-    // if there are many pdf's selected
-    if (a.length > 1 && unique.length === 1 && unique[0] == 'pdf') {
-        alert("Um PDF de cada vez!");
         filePicker.value = null;
         return;
     }
@@ -107,19 +100,16 @@ filePicker.addEventListener('change', () => {
         return;
     }
 
-    // if we are dealing with images
-    if (!unique.includes('pdf')){
+    // if there are pdf's selected (doesn't matter how many)
+    if (unique.length === 1 && unique[0] === 'pdf') {
+        await buildPdf();
+        return;
+    }
+
+    // if we are dealing with only images
+    if (!unique.includes('pdf')) {
         // convert every image into a pdf page, A4 sized. Get the bites out of this document and set it to fileBuffer, somehow make it work.
     }
-
-
-    let reader = new FileReader();
-    reader.onload = function () {
-        fileBuffer = this.result;
-        fileName = filePicker.files[0].name;
-        updatePDF();
-    }
-    reader.readAsArrayBuffer(filePicker.files[0]);
 });
 slider.addEventListener('change', updatePDF);
 colorPicker.addEventListener('change', updatePDF);
@@ -134,7 +124,7 @@ button.addEventListener('click', function (e) {
     });
 });
 
-const { PDFDocument, rgb, degrees } = PDFLib;
+const {PDFDocument, rgb, degrees} = PDFLib;
 
 async function drawNewPdf(orgBytes, preview) {
     return new Promise(async resolve => {
@@ -199,7 +189,7 @@ async function drawSVGBackground(page, backColor, dims) {
 
     await page.moveTo(0, page.getHeight())
     const color = hexToRgb(backColor);
-    await page.drawSvgPath(externalPath, { color: rgb(color.r / 255, color.g / 255, color.b / 255) })
+    await page.drawSvgPath(externalPath, {color: rgb(color.r / 255, color.g / 255, color.b / 255)})
 
     if (checkDefaultBackground.checked) {
         // this is the oldPage background that we are painting
@@ -210,7 +200,7 @@ async function drawSVGBackground(page, backColor, dims) {
             'L 0 ' + dims.h + ' ' +
             'L 0 0';
         await page.moveTo(dims.x, page.getHeight() - dims.y);
-        await page.drawSvgPath(internalPath, { color: rgb(1, 1, 1) })
+        await page.drawSvgPath(internalPath, {color: rgb(1, 1, 1)})
     }
 }
 
@@ -222,7 +212,7 @@ async function getAvgColorFromPage(oldPage) {
         }
 
         const canvas = document.createElement('canvas');
-        const ctx = canvas.getContext('2d', { willReadFrequently: true });
+        const ctx = canvas.getContext('2d', {willReadFrequently: true});
 
         const newDoc = await PDFDocument.create();
         const newPage = newDoc.addPage([oldPage.getWidth(), oldPage.getHeight()]);
@@ -230,13 +220,13 @@ async function getAvgColorFromPage(oldPage) {
         await newPage.drawPage(workPage);
         const bytes = await newDoc.save();
 
-        let { pdfjsLib } = globalThis;
+        let {pdfjsLib} = globalThis;
         pdfjsLib.GlobalWorkerOptions.workerSrc = '/scripts/pdf.worker.mjs';
-        pdfjsLib.getDocument({ data: bytes }).promise.then(function (pdf) {
+        pdfjsLib.getDocument({data: bytes}).promise.then(function (pdf) {
 
             pdf.getPage(1).then(function (page) {
 
-                const viewport = page.getViewport({ scale: 0.1 });
+                const viewport = page.getViewport({scale: 0.1});
                 canvas.height = viewport.height;
                 canvas.width = viewport.width;
 
@@ -261,6 +251,47 @@ function hexToRgb(hex) {
         g: parseInt(result[2], 16),
         b: parseInt(result[3], 16)
     } : null;
+}
+
+function readFileAsync(file) {
+    return new Promise((resolve, reject) => {
+        let reader = new FileReader();
+        reader.onload = () => {
+            resolve(reader.result);
+        };
+        reader.onerror = reject;
+        reader.readAsArrayBuffer(file);
+    })
+}
+
+function createPdfName(list) {
+    let name = '';
+
+    list.forEach(s => name += s.split('.')[0].substring(0, 5) + '-');
+
+    return name.substring(0, name.length - 1);
+}
+
+async function buildPdf() {
+
+    // if we dont need to concatenate, then dont
+    if (filePicker.files.length === 1) {
+        console.log('um só')
+        fileBuffer = await readFileAsync(filePicker.files[0]);
+        fileName = filePicker.files[0].name;
+    } else {
+        const mainDoc = await PDFDocument.load(await readFileAsync(filePicker.files[0]));
+        for (let i = 1; i < filePicker.files.length; i++) {
+            const secDoc = await PDFDocument.load(await readFileAsync(filePicker.files[i]));
+            const copiedPagesA = await mainDoc.copyPages(secDoc, secDoc.getPageIndices());
+            copiedPagesA.forEach((page) => mainDoc.addPage(page));
+        }
+
+        fileBuffer = await mainDoc.save();
+        fileName = 'merge_' + createPdfName(Array.from(filePicker.files).map(f => f.name)) + '.pdf';
+    }
+
+    updatePDF();
 }
 
 function defaultPDF() {

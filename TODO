@@ -36,8 +36,7 @@
     - suggested by babi
 
 -> concat all pdf's selected
+    - pdf to fileBuffer, somehow
     - concat everything? maymbe its too messy
 
 -> update cache version
-
--> test2
