@@ -1,5 +1,5 @@
 // only use cache stuff if we are not on production
-const isDev = window.location.hostname == "localhost";
+const isDev = window.location.hostname === "localhost";
 if ("serviceWorker" in navigator && !isDev) {
     window.addEventListener('load', async () => {
         try {
@@ -136,13 +136,16 @@ async function drawNewPdf(orgBytes, preview) {
 
         // this crazy condition is to use the same function for the preview and for the download function
         for (let i = 0; i < (preview ? 1 : pages.length); i++) {
-            const oldPage = pages[i];
+            let oldPage = pages[i];
 
             let color = await getAvgColorFromPage(oldPage);
             let newPage, workPage, workPageDims;
 
             // if it has to be A4 size (loses quality but can be printed easily)
             if (checkA4.checked) {
+                // let a4Page = newDoc.addPage(PageSizes.A4);
+                // oldPage = convertIntoA4();
+
                 newPage = newDoc.addPage([
                     Math.round(oldPage.getWidth()),
                     Math.round(oldPage.getHeight())
