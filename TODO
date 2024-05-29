@@ -39,12 +39,11 @@
 
 -> concat everything? maybe its too messy ! yeah its too messy im not doing it !
 
+-> loading screen for file upload or something ! disabled tag for file picker and download btn !
+
+-> code refactor to remove promise from drawNewPdf ! will not be doing this i like it !
+
 -> force A4 option (printing is broken) !
     - its not forcing A4 its just not changing the documents default size
-
--> loading screen for file upload or something
-
--> code refactor to remove promise from drawNewPdf
-
 
 -> update cache version

@@ -66,6 +66,7 @@ function displayPDF(pdfData) {
 }
 
 filePicker.addEventListener('change', async () => {
+    filePicker.setAttribute('disabled', '');
     if (filePicker.files.length === 0) {
         return;
     }
@@ -103,13 +104,14 @@ filePicker.addEventListener('change', async () => {
     // if there are pdf's selected (doesn't matter how many)
     if (unique.length === 1 && unique[0] === 'pdf') {
         await buildPdf();
-        return;
     }
 
     // if we are dealing with only images
     if (!unique.includes('pdf')) {
         await buildPdfFromImages();
     }
+
+    filePicker.removeAttribute('disabled');
 });
 slider.addEventListener('change', updatePDF);
 colorPicker.addEventListener('change', updatePDF);
@@ -118,9 +120,13 @@ checkAvgColor.addEventListener('change', updatePDF);
 checkA4.addEventListener('change', updatePDF);
 
 button.addEventListener('click', function (e) {
+    button.setAttribute('disabled', '');
+    button.classList.add('btn-secondary');
     e.preventDefault();
     drawNewPdf(fileBuffer, false).then(bytes => {
         download(bytes, 'slidez_' + fileName, "application/pdf");
+        button.removeAttribute('disabled');
+        button.classList.remove('btn-secondary');
     });
 });
 
