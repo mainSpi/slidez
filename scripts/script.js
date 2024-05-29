@@ -76,7 +76,7 @@ filePicker.addEventListener('change', async () => {
     // get file extensions
     let b = a.map(item => {
         let split = item.name.split('.');
-        return split[split.length - 1];
+        return split[split.length - 1].toLowerCase();
     });
 
     // select unique values from the extensions list
@@ -108,7 +108,7 @@ filePicker.addEventListener('change', async () => {
 
     // if we are dealing with only images
     if (!unique.includes('pdf')) {
-        // convert every image into a pdf page, A4 sized. Get the bites out of this document and set it to fileBuffer, somehow make it work.
+        await buildPdfFromImages();
     }
 });
 slider.addEventListener('change', updatePDF);
@@ -124,7 +124,7 @@ button.addEventListener('click', function (e) {
     });
 });
 
-const {PDFDocument, rgb, degrees} = PDFLib;
+const {PDFDocument, rgb, degrees, PageSizes} = PDFLib;
 
 async function drawNewPdf(orgBytes, preview) {
     return new Promise(async resolve => {
@@ -139,7 +139,7 @@ async function drawNewPdf(orgBytes, preview) {
             const oldPage = pages[i];
 
             let color = await getAvgColorFromPage(oldPage);
-            let newPage, workPage, workPageDims = null;
+            let newPage, workPage, workPageDims;
 
             // if it has to be A4 size (loses quality but can be printed easily)
             if (checkA4.checked) {
@@ -173,7 +173,7 @@ async function drawNewPdf(orgBytes, preview) {
                 x: newPage.getWidth() / 2 - workPageDims.width / 2,
                 y: newPage.getHeight() / 2 - workPageDims.height / 2,
             });
-            await newPage.setRotation(degrees(rotation));
+            await newPage.setRotation(degrees(rotation + oldPage.getRotation().angle));
         }
         newDoc.save().then(bytes => resolve(bytes));
 
@@ -272,6 +272,49 @@ function createPdfName(list) {
     return name.substring(0, name.length - 1);
 }
 
+async function buildPdfFromImages() {
+
+    const mainDoc = await PDFDocument.create();
+
+    for (let i = 0; i < filePicker.files.length; i++) {
+        let imageFile = filePicker.files[i];
+        let split = imageFile.name.split('.');
+        let extension = split[split.length - 1];
+        let isPng = extension.toLowerCase() === 'png';
+
+        let imgEmbedded;
+        let angle;
+        if (isPng) {
+            imgEmbedded = await mainDoc.embedPng(await readFileAsync(imageFile));
+        } else { // at this point, it can only be a jpg (or jpeg lol)
+            let bytes = await readFileAsync(imageFile);
+            imgEmbedded = await mainDoc.embedJpg(bytes);
+
+            // fix exif orientation (ignoring flipping cause thats hard)
+            let exif = getOrientation(bytes);
+            if (exif === 3 || exif === 4) {
+                angle = 180;
+            } else if (exif === 6 || exif === 5) {
+                angle = 90;
+            } else if (exif === 8 || exif === 7) {
+                angle = 270;
+            }
+        }
+
+        const page = await mainDoc.addPage([imgEmbedded.width, imgEmbedded.height]);
+        await page.drawImage(imgEmbedded);
+
+        if (!isPng) {
+            console.log('rotatinggg '+angle);
+            await page.setRotation(degrees(angle));
+        }
+    }
+
+    fileBuffer = await mainDoc.save();
+    fileName = 'merge_' + createPdfName(Array.from(filePicker.files).map(f => f.name)) + '.pdf';
+    updatePDF();
+}
+
 async function buildPdf() {
 
     // if we dont need to concatenate, then dont
@@ -292,6 +335,40 @@ async function buildPdf() {
     }
 
     updatePDF();
+}
+
+// https://stackoverflow.com/questions/7584794/accessing-jpeg-exif-rotation-data-in-javascript-on-the-client-side
+function getOrientation(bytes) {
+    let view = new DataView(bytes);
+    if (view.getUint16(0, false) !== 0xFFD8) {
+        return -2;
+    }
+    let length = view.byteLength, offset = 2;
+    while (offset < length) {
+        if (view.getUint16(offset + 2, false) <= 8) return -1;
+        let marker = view.getUint16(offset, false);
+        offset += 2;
+        if (marker === 0xFFE1) {
+            if (view.getUint32(offset += 2, false) !== 0x45786966) {
+                return -1;
+            }
+            let little = view.getUint16(offset += 6, false) === 0x4949;
+            offset += view.getUint32(offset + 4, little);
+            let tags = view.getUint16(offset, little);
+            offset += 2;
+            for (let i = 0; i < tags; i++) {
+                if (view.getUint16(offset + (i * 12), little) === 0x0112) {
+                    return view.getUint16(offset + (i * 12) + 8, little);
+                }
+            }
+        } else if ((marker & 0xFF00) !== 0xFF00) {
+            break;
+        } else {
+            offset += view.getUint16(offset, false);
+        }
+    }
+    return -1;
+
 }
 
 function defaultPDF() {

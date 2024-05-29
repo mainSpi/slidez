@@ -28,15 +28,20 @@
 -> better example pdf and isolate it from the scripts file !
 
 -> force A4 option (printing is broken) !
+    - its not forcing A4 its just not changing the documents default size
 
 -> image upload and concat feature
     - implement better verification strategy: only one pdf/png/jpg/jpeg is allowed, do not mix pdf with images !
     - https://pdf-lib.js.org/docs/api/classes/pdfdocument#embedpng
     - https://pdf-lib.js.org/docs/api/classes/pdfdocument#embedjpg
+    - need to fix image exif ! not flipping but fuck it
     - suggested by babi
 
--> concat all pdf's selected
-    - pdf to fileBuffer, somehow
-    - concat everything? maymbe its too messy
+-> concat all pdf's selected !
+    - pdf to fileBuffer, somehow !
+
+-> concat everything? maybe its too messy ! yeah its too messy im not doing it
 
 -> update cache version
+
+-> code refactor to remove promise from drawNewPdf
