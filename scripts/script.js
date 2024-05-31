@@ -14,7 +14,7 @@ if ("serviceWorker" in navigator && !isDev) {
 
 const filePicker = document.getElementById('fileInput');
 const colorPicker = document.getElementById('colorInput');
-const button = document.getElementById('baixarButton');
+const downloadButton = document.getElementById('baixarButton');
 const rotateButton = document.getElementById('rotateBtn');
 const slider = document.getElementById('blankRange');
 const displayCanvas = document.getElementById('the-canvas');
@@ -22,6 +22,7 @@ const checkDefaultBackground = document.getElementById('checkDefaultBackground')
 const checkAvgColor = document.getElementById('checkAvgColor');
 const checkA4 = document.getElementById('checkA4');
 const context = displayCanvas.getContext('2d', {willReadFrequently: true}); // https://html.spec.whatwg.org/multipage/canvas.html#concept-canvas-will-read-frequently
+const loadingModal = new bootstrap.Modal(document.getElementById("staticBackdrop")); // dont ask questions https://www.sitepoint.com/community/t/how-toggle-bootstrap-5-modal-without-button-click/363536/2
 
 const fac = new FastAverageColor();
 const {PDFDocument, rgb, degrees, PageSizes} = PDFLib;
@@ -37,16 +38,14 @@ checkA4.addEventListener('change', updatePDF);
 
 window.addEventListener('load', () => {
     defaultPDF();
-    updatePDF();
+    updatePDFNoModal();
 });
-button.addEventListener('click', function (e) {
-    button.setAttribute('disabled', '');
-    button.classList.add('btn-secondary');
+downloadButton.addEventListener('click', function (e) {
+    setLoading(false);
     e.preventDefault();
     drawNewPdf(fileBuffer, false).then(bytes => {
         download(bytes, 'slidez_' + fileName, "application/pdf");
-        button.removeAttribute('disabled');
-        button.classList.remove('btn-secondary');
+        setLoading(true);
     });
 });
 rotateButton.addEventListener('click', () => {
@@ -104,6 +103,18 @@ filePicker.addEventListener('change', async () => {
 
     filePicker.removeAttribute('disabled');
 });
+
+function setLoading(isDone) {
+    let things = [filePicker, colorPicker, checkA4, checkAvgColor, checkDefaultBackground, rotateButton, downloadButton, slider];
+    if (isDone) { // stop loading
+        things.forEach(e => e.removeAttribute('disabled'));
+        loadingModal.hide();
+        setTimeout(() => loadingModal.hide(), 1000);
+    } else { // start loading
+        things.forEach(e => e.setAttribute('disabled', ''));
+        loadingModal.show();
+    }
+}
 
 function displayPDF(pdfData) {
     let {pdfjsLib} = globalThis;
@@ -255,23 +266,7 @@ async function pageToA4(page) {
     const pdfDoc = await PDFDocument.create();
     const a4Page = await pdfDoc.addPage(PageSizes.A4);
 
-    // this two commented blocks are work in progress
-    /*
-    let angle =  page.getRotation().angle * Math.PI / 180;
-    console.log("angle: " + angle);
-    */
-
-    const embOddPage = await pdfDoc.embedPage(page /*, {
-        left: page.getWidth(), right: 0, top: page.getHeight(), bottom: 0
-    }, [
-        Math.cos(angle),
-        Math.sin(angle),
-        -1 * Math.sin(angle),
-        Math.cos(angle),
-        0,
-        0,
-    ]*/
-    );
+    const embOddPage = await pdfDoc.embedPage(page);
 
     let fx = PageSizes.A4[0] / embOddPage.width;
     let fy = PageSizes.A4[1] / embOddPage.height;
@@ -414,8 +409,15 @@ function getOrientation(bytes) {
 }
 
 function updatePDF() {
+    setLoading(false);
+    updatePDFNoModal();
+}
+
+// dont show the modal (just hide it lmao)
+function updatePDFNoModal() {
     drawNewPdf(fileBuffer, true).then(bytes => {
         displayPDF(bytes);
+        setLoading(true);
     });
 }
 

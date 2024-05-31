@@ -22,77 +22,98 @@
 </head>
 
 <body class="text-center css-selector" style="height: auto">
-    <main class="form-signin main-class">
-        <form>
-            <i class="bi bi-pencil-square" style="font-size: 5rem; color: #0078ff;"></i>
-            <h1 class="h3 fw-normal main-title">Slidez</h1>
+<main class="form-signin main-class">
+    <form id="form">
+        <i class="bi bi-pencil-square" style="font-size: 5rem; color: #0078ff;"></i>
+        <h1 class="h3 fw-normal main-title">Slidez</h1>
 
-            <div class="border border-3 rounded-3 border-light container mb-3">
-                <div class="mb-3 mt-2">
-                    <p class="fs-5">Selecione os PDF's ou as imagens desejadas</p>
-                </div>
-
-                <div class="mb-3">
-                    <input class="form-control" type="file" id="fileInput" accept=".pdf,image/png,image/jpg,image/jpeg" multiple>
-                </div>
-            </div>
-
-            <div class="container">
-                <div class="row">
-                    <div class="col"></div>
-                    <div class="col-auto">
-                        <div class="mb-3 row g-3 align-items-center">
-                            <div class="col-auto">
-                                <label for="colorInput" class="form-label" style="margin-bottom: 0;">Cor do
-                                    fundo</label>
-                            </div>
-                            <div class="col-auto">
-                                <input type="color" class="form-control form-control-color" id="colorInput"
-                                    value="#FFFFFF" title="Escolha a cor">
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col"></div>
-                </div>
-            </div>
-
-            <div class="form-check mb-3">
-                <input class="form-check-input" type="checkbox" value="" id="checkAvgColor">
-                <label class="form-check-label" for="checkAvgColor">
-                    Usar cor média de cada página
-                </label>
-            </div>
-
-            <div class="form-check mb-3">
-                <input class="form-check-input" type="checkbox" value="" id="checkDefaultBackground" checked>
-                <label class="form-check-label" for="checkDefaultBackground">
-                    Fundo opaco
-                </label>
-            </div>
-
-            <div class="form-check mb-3">
-                <input class="form-check-input" type="checkbox" value="" id="checkA4">
-                <label class="form-check-label" for="checkA4">
-                    Formato A4 (para impressão)
-                </label>
-            </div>
-
-            <div class="border border-3 rounded-3 border-light container mb-3">
-                <label for="blankRange" class="form-label mt-1">Espaço adicionado</label>
-                <input type="range" class="form-range mb-1" min="0" max="10" step="1" id="blankRange">
+        <div class="border border-3 rounded-3 border-light container mb-3">
+            <div class="mb-3 mt-2">
+                <p class="fs-5">Selecione os PDF's ou as imagens desejadas</p>
             </div>
 
             <div class="mb-3">
-                <button type="button" class="btn btn-secondary" id="rotateBtn">Rotacionar</button>
+                <input class="form-control" type="file" id="fileInput" accept=".pdf,image/png,image/jpg,image/jpeg"
+                       multiple>
             </div>
+        </div>
 
-            <canvas style="width: -webkit-fill-available; width: -moz-available;" id="the-canvas"></canvas>
+        <div class="container">
+            <div class="row">
+                <div class="col"></div>
+                <div class="col-auto">
+                    <div class="mb-3 row g-3 align-items-center">
+                        <div class="col-auto">
+                            <label for="colorInput" class="form-label" style="margin-bottom: 0;">Cor do
+                                fundo</label>
+                        </div>
+                        <div class="col-auto">
+                            <input type="color" class="form-control form-control-color" id="colorInput"
+                                   value="#FFFFFF" title="Escolha a cor">
+                        </div>
+                    </div>
+                </div>
+                <div class="col"></div>
+            </div>
+        </div>
 
-            <button class="w-100 btn btn-lg btn-primary" style="margin-top: 1rem;" id="baixarButton">Baixar</button>
-            <p class="mt-5 mb-3 text-muted">Murilo Spineli © <a href="https://github.com/mainSpi/slidez"
-                    class="text-muted" style="text-decoration: none">github.com/mainSpi</a></p>
-        </form>
-    </main>
+        <div class="form-check mb-3">
+            <input class="form-check-input" type="checkbox" value="" id="checkAvgColor">
+            <label class="form-check-label" for="checkAvgColor">
+                Usar cor média de cada página
+            </label>
+        </div>
+
+        <div class="form-check mb-3">
+            <input class="form-check-input" type="checkbox" value="" id="checkDefaultBackground" checked>
+            <label class="form-check-label" for="checkDefaultBackground">
+                Fundo opaco
+            </label>
+        </div>
+
+        <div class="form-check mb-3">
+            <input class="form-check-input" type="checkbox" value="" id="checkA4">
+            <label class="form-check-label" for="checkA4">
+                Formato A4 (para impressão)
+            </label>
+        </div>
+
+        <div class="border border-3 rounded-3 border-light container mb-3">
+            <label for="blankRange" class="form-label mt-1">Espaço adicionado</label>
+            <input type="range" class="form-range mb-1" min="0" max="10" step="1" id="blankRange">
+        </div>
+
+        <div class="mb-3">
+            <button type="button" class="btn btn-secondary" id="rotateBtn">Rotacionar</button>
+        </div>
+
+        <canvas style="width: -webkit-fill-available; width: -moz-available;" id="the-canvas"></canvas>
+
+        <button class="w-100 btn btn-lg btn-primary" style="margin-top: 1rem;" id="baixarButton">Baixar</button>
+        <p class="mt-5 mb-3 text-muted">Murilo Spineli © <a href="https://github.com/mainSpi/slidez"
+                                                            class="text-muted" style="text-decoration: none">github.com/mainSpi</a>
+        </p>
+    </form>
+
+    <!-- Modal -->
+    <div class="modal fade" id="staticBackdrop" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1"
+         aria-labelledby="staticBackdropLabel">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="staticBackdropLabel">Modal title</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="loader"></div>
+                </div>
+                <div class="modal-footer">
+                </div>
+            </div>
+        </div>
+    </div>
+
+</main>
 
 </body>
 
