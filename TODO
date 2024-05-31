@@ -60,3 +60,5 @@
 -> update cache version
 
 -> only use merge on file name if its more than one file
+
+-> revert pdf-lib to min version
