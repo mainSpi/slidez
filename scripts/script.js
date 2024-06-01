@@ -1,4 +1,4 @@
-// only use cache stuff if we are not on production
+﻿// only use cache stuff if we are not on production
 const isDev = window.location.hostname === "localhost";
 if ("serviceWorker" in navigator && !isDev) {
     window.addEventListener('load', async () => {
@@ -63,7 +63,6 @@ filePicker.addEventListener('change', async () => {
 
     // get file names
     let a = Array.from(filePicker.files);
-    console.log(a);
 
     // get file extensions
     let b = a.map(item => {
