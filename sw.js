@@ -1,5 +1,5 @@
 // Files to cache
-const cacheName = 'slidez-v6';
+const cacheName = 'slidez-v7';
 const appShellFiles = [
     '/',
     // '/images/',

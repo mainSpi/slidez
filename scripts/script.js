@@ -63,6 +63,7 @@ filePicker.addEventListener('change', async () => {
 
     // get file names
     let a = Array.from(filePicker.files);
+    console.log(a);
 
     // get file extensions
     let b = a.map(item => {
@@ -306,6 +307,17 @@ function readFileAsync(file) {
     })
 }
 
+function readFileAsyncURL(file) {
+    return new Promise((resolve, reject) => {
+        let reader = new FileReader();
+        reader.onload = () => {
+            resolve(reader.result);
+        };
+        reader.onerror = reject;
+        reader.readAsDataURL(file);
+    })
+}
+
 function createPdfName(list) {
     let name = '';
 
@@ -315,7 +327,10 @@ function createPdfName(list) {
 }
 
 async function buildPdfFromImages() {
+    setLoading(false);
     const mainDoc = await PDFDocument.create();
+
+    let embArray = new Array(filePicker.files.length);
 
     for (let i = 0; i < filePicker.files.length; i++) {
         let imageFile = filePicker.files[i];
@@ -324,14 +339,13 @@ async function buildPdfFromImages() {
         let isPng = extension.toLowerCase() === 'png';
 
         let imgEmbedded;
-        let angle = 0;
         if (isPng) {
             imgEmbedded = await mainDoc.embedPng(await readFileAsync(imageFile));
         } else { // at this point, it can only be a jpg (or jpeg lol)
-            let bytes = await readFileAsync(imageFile);
-            imgEmbedded = await mainDoc.embedJpg(bytes);
 
-            // fix exif orientation (ignoring flipping cause thats hard)
+            // extract exif
+            let bytes = await readFileAsync(imageFile);
+            let angle = 0;
             let exif = getOrientation(bytes);
             if (exif === 3 || exif === 4) {
                 angle = 180;
@@ -340,23 +354,72 @@ async function buildPdfFromImages() {
             } else if (exif === 8 || exif === 7) {
                 angle = 270;
             }
+
+            // if there is no exif
+            if (angle === 0) {
+                imgEmbedded = await mainDoc.embedJpg(bytes);
+            } else {
+                // all this shit is to fix exif orientation
+                let dataUrl = await readFileAsyncURL(imageFile);
+
+                const imageHidden = document.createElement('img');
+                imageHidden.src = dataUrl;
+                const canvas = document.createElement('canvas');
+
+                imageHidden.addEventListener('load', () => {
+                    canvas.width = imageHidden.naturalWidth
+                    canvas.height = imageHidden.naturalHeight;
+
+                    const ctx = canvas.getContext("2d");
+                    ctx.drawImage(imageHidden, 0, 0);
+
+                    canvas.toBlob(async (blob) => {
+                        let arrayBuffer = await blob.arrayBuffer();
+                        imgEmbedded = await mainDoc.embedPng(arrayBuffer);
+
+                    }, "image/png");
+
+                });
+            }
+
         }
 
-        const page = await mainDoc.addPage([imgEmbedded.width, imgEmbedded.height]);
-        await page.drawImage(imgEmbedded);
+        let interval = setInterval(async () => {
+            if (imgEmbedded) {
+                embArray[i] = imgEmbedded;
+                clearInterval(interval);
+            }
+        }, 100);
+    }
 
-        if (!isPng) {
-            await page.setRotation(degrees(angle));
+
+
+    let interval = setInterval(async () => {
+        let allDone = true;
+        for (let i = 0; i < filePicker.files.length; i++) {
+            if (allDone) {
+                if (!embArray[i]) {
+                    allDone = false;
+                }
+            }
         }
-    }
+        if (allDone) {
+            for (const imgEmbedded of embArray) {
+                const page = await mainDoc.addPage([imgEmbedded.width, imgEmbedded.height]);
+                await page.drawImage(imgEmbedded);
+            }
+            fileBuffer = await mainDoc.save();
+            if (filePicker.files.length > 1) {
+                fileName = 'merge_' + createPdfName(Array.from(filePicker.files).map(f => f.name)) + '.pdf';
+            } else {
+                fileName = filePicker.files[0].name;
+            }
 
-    fileBuffer = await mainDoc.save();
-    if (filePicker.files.length > 1) {
-        fileName = 'merge_' + createPdfName(Array.from(filePicker.files).map(f => f.name)) + '.pdf';
-    } else {
-        fileName = filePicker.files[0].name;
-    }
-    updatePDF();
+            updatePDFNoModal();
+            clearInterval(interval);
+        }
+    }, 100);
+
 }
 
 async function buildPdf() {

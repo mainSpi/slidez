@@ -50,15 +50,20 @@
 
     https://opensource.adobe.com/dc-acrobat-sdk-docs/pdfstandards/PDF32000_2008.pdf
         page 128
+        kys kind of reading
 
     https://math.stackexchange.com/questions/2093314/rotation-matrix-of-rotation-around-a-point-other-than-the-origin
 
     https://www.geeksforgeeks.org/javascript-program-to-multiply-two-matrices/
 
-    FX AND FY NEED TO BE MATH.ABS() AS IN TEST.HTML
+    https://www.dynamsoft.com/codepool/how-to-rotate-image-with-javascript.html -> this one was the fucking one
 
--> update cache version
+    FX AND FY NEED TO BE MATH.ABS() AS IN TEST.HTML ! no they dont lol
 
 -> only use merge on file name if its more than one file !
 
 -> revert pdf-lib to min version ! not needed just not use minified version !
+
+-> update cache version
+
+-> Choose file order
