@@ -39,7 +39,7 @@
 
 -> concat everything? maybe its too messy ! yeah its too messy im not doing it !
 
--> loading screen for file upload or something ! disabled tag for file picker and download btn !
+-> loading screen for file upload or something ! disabled tag for file picker and download btn ! now its better !
 
 -> code refactor to remove promise from drawNewPdf ! will not be doing this i like it !
 
@@ -59,6 +59,6 @@
 
 -> update cache version
 
--> only use merge on file name if its more than one file
+-> only use merge on file name if its more than one file !
 
 -> revert pdf-lib to min version ! not needed just not use minified version !

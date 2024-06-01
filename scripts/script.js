@@ -21,11 +21,11 @@ const displayCanvas = document.getElementById('the-canvas');
 const checkDefaultBackground = document.getElementById('checkDefaultBackground');
 const checkAvgColor = document.getElementById('checkAvgColor');
 const checkA4 = document.getElementById('checkA4');
-const context = displayCanvas.getContext('2d', {willReadFrequently: true}); // https://html.spec.whatwg.org/multipage/canvas.html#concept-canvas-will-read-frequently
+const context = displayCanvas.getContext('2d', { willReadFrequently: true }); // https://html.spec.whatwg.org/multipage/canvas.html#concept-canvas-will-read-frequently
 const loadingModal = new bootstrap.Modal(document.getElementById("staticBackdrop")); // dont ask questions https://www.sitepoint.com/community/t/how-toggle-bootstrap-5-modal-without-button-click/363536/2
 
 const fac = new FastAverageColor();
-const {PDFDocument, rgb, degrees, PageSizes} = PDFLib;
+const { PDFDocument, rgb, degrees, PageSizes } = PDFLib;
 let rotation = 0;
 let fileBuffer = '';
 let fileName = '';
@@ -109,6 +109,7 @@ function setLoading(isDone) {
     if (isDone) { // stop loading
         things.forEach(e => e.removeAttribute('disabled'));
         loadingModal.hide();
+        // sometimes it loads to quick and it cant hide properly
         setTimeout(() => loadingModal.hide(), 1000);
     } else { // start loading
         things.forEach(e => e.setAttribute('disabled', ''));
@@ -117,12 +118,12 @@ function setLoading(isDone) {
 }
 
 function displayPDF(pdfData) {
-    let {pdfjsLib} = globalThis;
+    let { pdfjsLib } = globalThis;
     pdfjsLib.GlobalWorkerOptions.workerSrc = '/scripts/pdf.worker.mjs';
-    pdfjsLib.getDocument({data: pdfData}).promise.then(function (pdf) {
+    pdfjsLib.getDocument({ data: pdfData }).promise.then(function (pdf) {
         pdf.getPage(1).then(function (page) {
 
-            const viewport = page.getViewport({scale: 1});
+            const viewport = page.getViewport({ scale: 1 });
 
             // Prepare canvas using PDF page dimensions
             displayCanvas.height = viewport.height;
@@ -207,7 +208,7 @@ async function drawSVGBackground(page, backColor, dims) {
 
     await page.moveTo(0, page.getHeight())
     const color = hexToRgb(backColor);
-    await page.drawSvgPath(externalPath, {color: rgb(color.r / 255, color.g / 255, color.b / 255)})
+    await page.drawSvgPath(externalPath, { color: rgb(color.r / 255, color.g / 255, color.b / 255) })
 
     if (checkDefaultBackground.checked) {
         // this is the oldPage background that we are painting
@@ -218,7 +219,7 @@ async function drawSVGBackground(page, backColor, dims) {
             'L 0 ' + dims.h + ' ' +
             'L 0 0';
         await page.moveTo(dims.x, page.getHeight() - dims.y);
-        await page.drawSvgPath(internalPath, {color: rgb(1, 1, 1)})
+        await page.drawSvgPath(internalPath, { color: rgb(1, 1, 1) })
     }
 }
 
@@ -230,7 +231,7 @@ async function getAvgColorFromPage(oldPage) {
         }
 
         const canvas = document.createElement('canvas');
-        const ctx = canvas.getContext('2d', {willReadFrequently: true});
+        const ctx = canvas.getContext('2d', { willReadFrequently: true });
 
         const newDoc = await PDFDocument.create();
         const newPage = newDoc.addPage([oldPage.getWidth(), oldPage.getHeight()]);
@@ -238,13 +239,13 @@ async function getAvgColorFromPage(oldPage) {
         await newPage.drawPage(workPage);
         const bytes = await newDoc.save();
 
-        let {pdfjsLib} = globalThis;
+        let { pdfjsLib } = globalThis;
         pdfjsLib.GlobalWorkerOptions.workerSrc = '/scripts/pdf.worker.mjs';
-        pdfjsLib.getDocument({data: bytes}).promise.then(function (pdf) {
+        pdfjsLib.getDocument({ data: bytes }).promise.then(function (pdf) {
 
             pdf.getPage(1).then(function (page) {
 
-                const viewport = page.getViewport({scale: 0.1});
+                const viewport = page.getViewport({ scale: 0.1 });
                 canvas.height = viewport.height;
                 canvas.width = viewport.width;
 
@@ -350,7 +351,11 @@ async function buildPdfFromImages() {
     }
 
     fileBuffer = await mainDoc.save();
-    fileName = 'merge_' + createPdfName(Array.from(filePicker.files).map(f => f.name)) + '.pdf';
+    if (filePicker.files.length > 1) {
+        fileName = 'merge_' + createPdfName(Array.from(filePicker.files).map(f => f.name)) + '.pdf';
+    } else {
+        fileName = filePicker.files[0].name;
+    }
     updatePDF();
 }
 
@@ -366,9 +371,6 @@ async function buildPdf() {
             const copiedPagesA = await mainDoc.copyPages(secDoc, secDoc.getPageIndices());
             copiedPagesA.forEach((page) => mainDoc.addPage(page));
         }
-
-        fileBuffer = await mainDoc.save();
-        fileName = 'merge_' + createPdfName(Array.from(filePicker.files).map(f => f.name)) + '.pdf';
     }
 
     updatePDF();
