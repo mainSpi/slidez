@@ -1,4 +1,9 @@
-﻿// only use cache stuff if we are not on production
+﻿// com certeza você não vai achar as respostas que você está buscando nesse código macarrônico e pouco comentado
+// melhor vc abrir uma issue no github kkkkkkkkkkkk
+
+
+
+// only use cache stuff if we are not on production
 const isDev = window.location.hostname === "localhost";
 if ("serviceWorker" in navigator && !isDev) {
     window.addEventListener('load', async () => {
