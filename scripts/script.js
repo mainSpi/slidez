@@ -22,13 +22,16 @@ const checkDefaultBackground = document.getElementById('checkDefaultBackground')
 const checkAvgColor = document.getElementById('checkAvgColor');
 const checkA4 = document.getElementById('checkA4');
 const loadingModal = new bootstrap.Modal(document.getElementById("staticBackdrop")); // dont ask questions https://www.sitepoint.com/community/t/how-toggle-bootstrap-5-modal-without-button-click/363536/2
-const fileList = document.getElementById('fileList');
+const fileListElement = document.getElementById('fileList');
 
 const fac = new FastAverageColor();
 const { PDFDocument, rgb, degrees, PageSizes } = PDFLib;
 let rotation = 0;
 let fileBuffer = '';
 let fileName = '';
+let draggedItem = null;
+let fileList = null;
+let isPDF = false;
 
 slider.addEventListener('change', updatePDF);
 colorPicker.addEventListener('change', updatePDF);
@@ -91,16 +94,9 @@ filePicker.addEventListener('change', async () => {
     }
 
     // if there are pdf's selected (doesn't matter how many)
-    if (unique.length === 1 && unique[0] === 'pdf') {
-        await buildPdf();
-    }
+    isPDF = unique.length === 1 && unique[0] === 'pdf';
 
-    // if we are dealing with only images
-    if (!unique.includes('pdf')) {
-        await buildPdfFromImages();
-    }
-
-    refreshFileList(filePicker.files);
+    populateFileList(filePicker.files);
 });
 
 function setLoading(isDone) {
@@ -148,7 +144,7 @@ async function drawNewPdf(orgBytes, preview) {
         for (let i = 0; i < (preview ? 1 : pages.length); i++) {
             let oldPage = pages[i];
 
-            let color = await getAvgColorFromPage(oldPage);
+            let color = await getAvgColorFromPage(pdfDoc, i);
             let newPage, workPage, workPageDims;
 
             // if it has to be A4 size (loses quality but can be printed easily)
@@ -217,7 +213,7 @@ async function drawSVGBackground(page, backColor, dims) {
     }
 }
 
-async function getAvgColorFromPage(oldPage) {
+async function getAvgColorFromPage(oldDoc, index) {
     return new Promise(async resolve => {
         // if we dont have to, then dont
         if (!checkAvgColor.checked) {
@@ -228,9 +224,9 @@ async function getAvgColorFromPage(oldPage) {
         const canvas = document.createElement('canvas');
 
         const newDoc = await PDFDocument.create();
-        const newPage = newDoc.addPage([oldPage.getWidth(), oldPage.getHeight()]);
-        const workPage = await newDoc.embedPage(oldPage);
-        await newPage.drawPage(workPage);
+        const copiedPages = await newDoc.copyPages(oldDoc, [index]);
+        newDoc.addPage(copiedPages[0])
+
         const bytes = await newDoc.save();
 
         displayPDF(bytes, canvas, 0.1).then(() => {
@@ -307,10 +303,10 @@ async function buildPdfFromImages() {
     setLoading(false);
     const mainDoc = await PDFDocument.create();
 
-    let embArray = new Array(filePicker.files.length);
+    let embArray = new Array(fileList.length);
 
-    for (let i = 0; i < filePicker.files.length; i++) {
-        let imageFile = filePicker.files[i];
+    for (let i = 0; i < fileList.length; i++) {
+        let imageFile = fileList[i];
         let split = imageFile.name.split('.');
         let extension = split[split.length - 1];
         let isPng = extension.toLowerCase() === 'png';
@@ -371,7 +367,7 @@ async function buildPdfFromImages() {
 
     let interval = setInterval(async () => {
         let allDone = true;
-        for (let i = 0; i < filePicker.files.length; i++) {
+        for (let i = 0; i < fileList.length; i++) {
             if (allDone) {
                 if (!embArray[i]) {
                     allDone = false;
@@ -384,10 +380,10 @@ async function buildPdfFromImages() {
                 await page.drawImage(imgEmbedded);
             }
             fileBuffer = await mainDoc.save();
-            if (filePicker.files.length > 1) {
-                fileName = 'merge_' + createPdfName(Array.from(filePicker.files).map(f => f.name)) + '.pdf';
+            if (fileList.length > 1) {
+                fileName = 'merge_' + createPdfName(Array.from(fileList).map(f => f.name)) + '.pdf';
             } else {
-                fileName = filePicker.files[0].name;
+                fileName = fileList[0].name;
             }
 
             updatePDFNoModal();
@@ -399,18 +395,18 @@ async function buildPdfFromImages() {
 
 async function buildPdf() {
     // if we dont need to concatenate, then dont
-    if (filePicker.files.length === 1) {
-        fileBuffer = await readFileAsync(filePicker.files[0]);
-        fileName = filePicker.files[0].name;
+    if (fileList.length === 1) {
+        fileBuffer = await readFileAsync(fileList[0]);
+        fileName = fileList[0].name;
     } else {
-        const mainDoc = await PDFDocument.load(await readFileAsync(filePicker.files[0]));
-        for (let i = 1; i < filePicker.files.length; i++) {
-            const secDoc = await PDFDocument.load(await readFileAsync(filePicker.files[i]));
+        const mainDoc = await PDFDocument.load(await readFileAsync(fileList[0]));
+        for (let i = 1; i < fileList.length; i++) {
+            const secDoc = await PDFDocument.load(await readFileAsync(fileList[i]));
             const copiedPagesA = await mainDoc.copyPages(secDoc, secDoc.getPageIndices());
             copiedPagesA.forEach((page) => mainDoc.addPage(page));
         }
         fileBuffer = await mainDoc.save();
-        fileName = 'merge_' + createPdfName(Array.from(filePicker.files).map(f => f.name)) + '.pdf';
+        fileName = 'merge_' + createPdfName(Array.from(fileList).map(f => f.name)) + '.pdf';
     }
 
     updatePDF();
@@ -474,10 +470,10 @@ function defaultPDF() {
     fileName = "EXEMPLO.pdf"
 }
 
-async function refreshFileList(list) {
+function populateFileList(list) {
 
-    while (fileList.children.length > 0) {
-        fileList.removeChild(fileList.children[0]);
+    while (fileListElement.children.length > 0) {
+        fileListElement.removeChild(fileListElement.children[0]);
     }
 
     for (let k = 0; k < list.length; k++) {
@@ -516,20 +512,43 @@ async function refreshFileList(list) {
         li.appendChild(i);
         li.appendChild(p);
         li.appendChild(img);
-        fileList.appendChild(li);
+        fileListElement.appendChild(li);
     }
 
+    setFileList();
+}
+
+function setFileList() {
+    let newFileList = Array.of(...fileListElement.children).map((li) => {
+        return filePicker.files[new Number(li.getAttribute('fileIndex'))]
+    });
+    for (let i = 0; i < newFileList.length; i++) {
+        // if fileList is blank, its the first iteration. OR there actually was a change.
+        if (!fileList || newFileList[i].name !== fileList[i].name) {
+            fileList = newFileList;
+            buildFileBuffer(isPDF);
+            return;
+        }
+    }
 }
 
 function clearActive() {
-    for (const li of fileList.children) {
+    for (const li of fileListElement.children) {
         li.classList.remove('active');
     }
 }
 
+function buildFileBuffer(isPDF) {
+    setLoading(false);
+    if (isPDF) {
+        buildPdf();
+    } else {
+        buildPdfFromImages();
+    }
+}
+
 // FILE LIST SECTION
-let draggedItem = null;
-fileList.addEventListener(
+fileListElement.addEventListener(
     "dragstart",
     (e) => {
         draggedItem = e.target;
@@ -541,31 +560,32 @@ fileList.addEventListener(
         }, 0);
     });
 
-fileList.addEventListener(
+fileListElement.addEventListener(
     "dragend",
     (e) => {
         setTimeout(() => {
             e.target.style.display = "";
             clearActive();
             draggedItem = null;
+            setFileList();
         }, 0);
     });
 
-fileList.addEventListener(
+fileListElement.addEventListener(
     "dragover",
     (e) => {
         e.preventDefault();
         const afterElement =
             getDragAfterElement(
-                fileList,
+                fileListElement,
                 e.clientY);
         if (afterElement == null) {
-            fileList.appendChild(
+            fileListElement.appendChild(
                 draggedItem
             );
         }
         else {
-            fileList.insertBefore(
+            fileListElement.insertBefore(
                 draggedItem,
                 afterElement
             );
