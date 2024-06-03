@@ -21,8 +21,8 @@ const displayCanvas = document.getElementById('the-canvas');
 const checkDefaultBackground = document.getElementById('checkDefaultBackground');
 const checkAvgColor = document.getElementById('checkAvgColor');
 const checkA4 = document.getElementById('checkA4');
-const context = displayCanvas.getContext('2d', { willReadFrequently: true }); // https://html.spec.whatwg.org/multipage/canvas.html#concept-canvas-will-read-frequently
 const loadingModal = new bootstrap.Modal(document.getElementById("staticBackdrop")); // dont ask questions https://www.sitepoint.com/community/t/how-toggle-bootstrap-5-modal-without-button-click/363536/2
+const fileList = document.getElementById('fileList');
 
 const fac = new FastAverageColor();
 const { PDFDocument, rgb, degrees, PageSizes } = PDFLib;
@@ -56,7 +56,6 @@ rotateButton.addEventListener('click', () => {
     updatePDF();
 });
 filePicker.addEventListener('change', async () => {
-    filePicker.setAttribute('disabled', '');
     if (filePicker.files.length === 0) {
         return;
     }
@@ -101,7 +100,7 @@ filePicker.addEventListener('change', async () => {
         await buildPdfFromImages();
     }
 
-    filePicker.removeAttribute('disabled');
+    refreshFileList(filePicker.files);
 });
 
 function setLoading(isDone) {
@@ -117,26 +116,24 @@ function setLoading(isDone) {
     }
 }
 
-function displayPDF(pdfData) {
+async function displayPDF(pdfData, canvas, scale) {
     let { pdfjsLib } = globalThis;
     pdfjsLib.GlobalWorkerOptions.workerSrc = '/scripts/pdf.worker.mjs';
-    pdfjsLib.getDocument({ data: pdfData }).promise.then(function (pdf) {
-        pdf.getPage(1).then(function (page) {
+    const pdf = await pdfjsLib.getDocument({ data: pdfData }).promise;
+    const page = await pdf.getPage(1);
 
-            const viewport = page.getViewport({ scale: 1 });
+    const viewport = page.getViewport({ scale: scale });
 
-            // Prepare canvas using PDF page dimensions
-            displayCanvas.height = viewport.height;
-            displayCanvas.width = viewport.width;
+    // Prepare canvas using PDF page dimensions
+    canvas.height = viewport.height;
+    canvas.width = viewport.width;
 
-            // Render PDF page into canvas context
-            const renderContext = {
-                canvasContext: context,
-                viewport: viewport
-            };
-            page.render(renderContext);
-        });
-    });
+    // Render PDF page into canvas context
+    const renderContext = {
+        canvasContext: canvas.getContext('2d', { willReadFrequently: true }), // https://html.spec.whatwg.org/multipage/canvas.html#concept-canvas-will-read-frequently
+        viewport: viewport
+    };
+    return page.render(renderContext).promise;
 }
 
 async function drawNewPdf(orgBytes, preview) {
@@ -167,9 +164,6 @@ async function drawNewPdf(orgBytes, preview) {
                 workPage = await newDoc.embedPage(oldPage);
                 workPageDims = workPage.scale(1 / increaseValue);
 
-                // newPage seja A4
-                // workPage seja o produto final ali do lado
-
             } else { // increase page size to preserve resolution
                 newPage = newDoc.addPage([
                     oldPage.getWidth() * increaseValue,
@@ -194,7 +188,7 @@ async function drawNewPdf(orgBytes, preview) {
             });
             await newPage.setRotation(degrees(rotation + oldPage.getRotation().angle));
         }
-        newDoc.save().then(bytes => resolve(bytes));
+        resolve(await newDoc.save());
 
     });
 }
@@ -225,13 +219,13 @@ async function drawSVGBackground(page, backColor, dims) {
 
 async function getAvgColorFromPage(oldPage) {
     return new Promise(async resolve => {
+        // if we dont have to, then dont
         if (!checkAvgColor.checked) {
             resolve(colorPicker.value);
             return;
         }
 
         const canvas = document.createElement('canvas');
-        const ctx = canvas.getContext('2d', { willReadFrequently: true });
 
         const newDoc = await PDFDocument.create();
         const newPage = newDoc.addPage([oldPage.getWidth(), oldPage.getHeight()]);
@@ -239,24 +233,8 @@ async function getAvgColorFromPage(oldPage) {
         await newPage.drawPage(workPage);
         const bytes = await newDoc.save();
 
-        let { pdfjsLib } = globalThis;
-        pdfjsLib.GlobalWorkerOptions.workerSrc = '/scripts/pdf.worker.mjs';
-        pdfjsLib.getDocument({ data: bytes }).promise.then(function (pdf) {
-
-            pdf.getPage(1).then(function (page) {
-
-                const viewport = page.getViewport({ scale: 0.1 });
-                canvas.height = viewport.height;
-                canvas.width = viewport.width;
-
-                const renderContext = {
-                    canvasContext: ctx,
-                    viewport: viewport
-                };
-                page.render(renderContext).promise.then(() => {
-                    resolve(fac.getColor(canvas).hex);
-                });
-            });
+        displayPDF(bytes, canvas, 0.1).then(() => {
+            resolve(fac.getColor(canvas).hex);
         });
     })
 
@@ -391,8 +369,6 @@ async function buildPdfFromImages() {
         }, 100);
     }
 
-
-
     let interval = setInterval(async () => {
         let allDone = true;
         for (let i = 0; i < filePicker.files.length; i++) {
@@ -433,6 +409,8 @@ async function buildPdf() {
             const copiedPagesA = await mainDoc.copyPages(secDoc, secDoc.getPageIndices());
             copiedPagesA.forEach((page) => mainDoc.addPage(page));
         }
+        fileBuffer = await mainDoc.save();
+        fileName = 'merge_' + createPdfName(Array.from(filePicker.files).map(f => f.name)) + '.pdf';
     }
 
     updatePDF();
@@ -480,8 +458,7 @@ function updatePDF() {
 // dont show the modal (just hide it lmao)
 function updatePDFNoModal() {
     drawNewPdf(fileBuffer, true).then(bytes => {
-        displayPDF(bytes);
-        setLoading(true);
+        displayPDF(bytes, displayCanvas, 1).then(() => setLoading(true));
     });
 }
 
@@ -496,3 +473,133 @@ function defaultPDF() {
     fileBuffer = view;
     fileName = "EXEMPLO.pdf"
 }
+
+async function refreshFileList(list) {
+
+    while (fileList.children.length > 0) {
+        fileList.removeChild(fileList.children[0]);
+    }
+
+    for (let k = 0; k < list.length; k++) {
+        const f = list[k];
+
+        const li = document.createElement('li');
+        li.setAttribute('class', 'list-group-item d-flex justify-content-between align-items-center li-list-item');
+        li.setAttribute('draggable', 'true');
+        li.setAttribute('fileIndex', k);
+
+        const i = document.createElement('i');
+        i.setAttribute('class', 'bi bi-arrow-down-up i-list-item');
+
+        const p = document.createElement('p');
+        p.setAttribute('class', 'p-list-item');
+        p.innerText = f.name;
+
+        const img = document.createElement('img');
+        img.setAttribute('class', 'img-list-item');
+        let split = f.name.split('.');
+        let extension = split[split.length - 1].toLowerCase();
+
+        if (extension === 'pdf') {
+            const canvas = document.createElement('canvas');
+            // i prefer using await but this makes the list load in slowly. With this it loads instantantly but with empty images.
+            readFileAsync(f).then((bytes) => {
+                displayPDF(bytes, canvas, 1).then(() => {
+                    img.src = canvas.toDataURL();
+                });
+            });
+        } else {
+            readFileAsyncURL(f).then((url) => img.src = url);
+        }
+        img.setAttribute('draggable', 'false');
+
+        li.appendChild(i);
+        li.appendChild(p);
+        li.appendChild(img);
+        fileList.appendChild(li);
+    }
+
+}
+
+function clearActive() {
+    for (const li of fileList.children) {
+        li.classList.remove('active');
+    }
+}
+
+// FILE LIST SECTION
+let draggedItem = null;
+fileList.addEventListener(
+    "dragstart",
+    (e) => {
+        draggedItem = e.target;
+        clearActive();
+        draggedItem.classList.add('active');
+        setTimeout(() => {
+            e.target.style.display =
+                "none";
+        }, 0);
+    });
+
+fileList.addEventListener(
+    "dragend",
+    (e) => {
+        setTimeout(() => {
+            e.target.style.display = "";
+            clearActive();
+            draggedItem = null;
+        }, 0);
+    });
+
+fileList.addEventListener(
+    "dragover",
+    (e) => {
+        e.preventDefault();
+        const afterElement =
+            getDragAfterElement(
+                fileList,
+                e.clientY);
+        if (afterElement == null) {
+            fileList.appendChild(
+                draggedItem
+            );
+        }
+        else {
+            fileList.insertBefore(
+                draggedItem,
+                afterElement
+            );
+        }
+    });
+
+const getDragAfterElement = (
+    container, y
+) => {
+    const draggableElements = [
+        ...container.querySelectorAll(
+            "li:not(.dragging)"
+        ),];
+
+    return draggableElements.reduce(
+        (closest, child) => {
+            const box =
+                child.getBoundingClientRect();
+            const offset =
+                y - box.top - box.height / 2;
+            if (
+                offset < 0 &&
+                offset > closest.offset) {
+                return {
+                    offset: offset,
+                    element: child,
+                };
+            }
+            else {
+                return closest;
+            }
+        },
+        {
+            offset: Number.NEGATIVE_INFINITY,
+        }
+    ).element;
+};

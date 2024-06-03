@@ -160,3 +160,43 @@ body {
     margin-right: auto;
     top: 30%;
 }
+
+.img-list-item {
+    height: 3rem;
+    margin-left: 1rem;
+}
+
+.p-list-item {
+    margin-top: auto;
+    margin-bottom: auto;
+    overflow: hidden;
+    /* margin-left: 1rem; */
+    /* margin-right: 1rem; */
+    margin-left: auto;
+    margin-right: auto;
+}
+
+.li-list-item {
+    white-space: nowrap;
+    cursor: all-scroll;
+    -webkit-touch-callout: none;
+    -webkit-user-select: none;
+    -khtml-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+}
+
+.li-list-item::before {
+    margin-right: 1rem;
+    font-weight: bold;
+}
+
+.i-list-item {
+    margin-right: 1rem;
+}
+
+.canvas {
+    width: -webkit-fill-available;
+    width: -moz-available;
+}
